@@ -15,26 +15,16 @@
   @keyframes fcTwinkle{0%,100%{opacity:.25}50%{opacity:.9}}
   html{height:100%}
   body{min-height:100%;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#4A3436;}
-  .desktop-shell{min-height:100vh;width:100%;display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,430px);gap:34px;align-items:center;padding:34px;position:relative;overflow:hidden;background:radial-gradient(circle at 18% 16%,rgba(241,185,199,.55),transparent 26rem),radial-gradient(circle at 84% 12%,rgba(228,211,240,.72),transparent 24rem),linear-gradient(140deg,#FFF8F6 0%,#F8ECE9 46%,#EFE2F0 100%);}
-  .desktop-shell:before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 18% 22%,rgba(201,124,147,.14) 0 4px,transparent 5px),radial-gradient(circle at 82% 72%,rgba(157,128,172,.13) 0 3px,transparent 4px);background-size:140px 140px,180px 180px;}
-  .desktop-intro{position:relative;z-index:1;max-width:640px;padding:42px;border-radius:34px;background:rgba(255,255,255,.68);box-shadow:0 24px 70px rgba(201,124,144,.18);backdrop-filter:blur(18px);}
-  .desktop-intro .eyebrow{margin:0 0 14px;color:#C97C93;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
-  .desktop-intro h1{margin:0 0 16px;font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.06em;color:#4A3436;}
-  .desktop-intro p{margin:0 0 22px;max-width:560px;color:#7C6460;font-size:18px;line-height:1.65;}
-  .desktop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px;}
-  .desktop-card{min-height:112px;border:1px solid #F0D7DC;border-radius:22px;background:#fff;padding:18px;box-shadow:0 10px 26px rgba(201,124,144,.10);}
-  .desktop-card strong{display:block;margin-bottom:8px;color:#4A3436;font-size:15px;}
-  .desktop-card span{color:#9C7F76;font-size:13px;line-height:1.45;}
-  .app-column{position:relative;z-index:1;display:flex;justify-content:center;}
-  .app-column:before{content:"Phone app preview";position:absolute;top:-28px;color:#9C7F76;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
-  #app{position:relative;width:100%;max-width:402px;min-height:100vh;background:#F8ECE9;box-shadow:0 26px 80px rgba(74,52,54,.22);overflow:hidden;}
+  .desktop-shell{min-height:100vh;width:100%;display:block;position:relative;overflow:hidden;background:#F8ECE9;}
+  .desktop-intro{display:none;}
+  .app-column{position:relative;z-index:1;display:block;min-height:100vh;}
+  #app{position:relative;width:100%;min-height:100vh;background:#F8ECE9;box-shadow:none;overflow:hidden;}
   @media (min-width: 760px){
-    #app{border-radius:34px;min-height:min(860px,calc(100vh - 68px));}
-    #app > div{min-height:min(860px,calc(100vh - 68px)) !important;}
+    #app{max-width:none;border-radius:0;min-height:100vh;}
+    #app > div{min-height:100vh !important;}
   }
   @media (max-width: 759px){
     .desktop-shell{display:block;min-height:100vh;padding:0;background:#F8ECE9;overflow:visible;}
-    .desktop-shell:before,.desktop-intro,.app-column:before{display:none;}
     .app-column{display:block;}
     #app{max-width:none;min-height:100vh;box-shadow:none;}
   }
@@ -43,17 +33,6 @@
 <body>
 
 <main class="desktop-shell">
-  <section class="desktop-intro" aria-label="Aurora Calendar desktop overview">
-    <p class="eyebrow">Aurora Calendar</p>
-    <h1>Family planning, pretty enough to keep open.</h1>
-    <p>Use the live app panel to manage bills, paychecks, family reminders, calendar dates, lists, and deals. On phones, this page becomes the full app experience automatically.</p>
-    <div class="desktop-grid">
-      <div class="desktop-card"><strong>Bills + Money</strong><span>Track due dates, paychecks, paid status, and financial events in one calm view.</span></div>
-      <div class="desktop-card"><strong>Calendar</strong><span>See bills, activities, appointments, and reminders by date without crowding the screen.</span></div>
-      <div class="desktop-card"><strong>Family</strong><span>Keep kids' schedules, school items, appointments, and tasks close at hand.</span></div>
-      <div class="desktop-card"><strong>Local Data</strong><span>Your browser stores app data locally on each device with no backend required.</span></div>
-    </div>
-  </section>
   <section class="app-column" aria-label="Aurora Calendar app">
     <div id="app"></div>
   </section>
