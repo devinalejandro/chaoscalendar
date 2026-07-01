@@ -769,9 +769,14 @@ class Component extends DCLogic {
 
   // ---- persistence ----
   _DKEYS = ['items','paychecks','payday','remindLead','remindTypes','homeView','onboarded'];
+  _cloudTimer = null;
+  _snapshot(){ const o={}; this._DKEYS.forEach(k=>o[k]=this.state[k]); return o; }
   _load(){ try{ const r=localStorage.getItem('auroraCalendar.v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
-  _persist(){ try{ const o={}; this._DKEYS.forEach(k=>o[k]=this.state[k]); localStorage.setItem('auroraCalendar.v1', JSON.stringify(o)); }catch(e){} }
-  clearAll(){ try{ localStorage.removeItem('auroraCalendar.v1'); }catch(e){} location.reload(); }
+  _persist(){ try{ const o=this._snapshot(); localStorage.setItem('auroraCalendar.v1', JSON.stringify(o)); this._queueCloudSave(o); }catch(e){} }
+  _queueCloudSave(o){ if(!window.fetch) return; clearTimeout(this._cloudTimer); this._cloudTimer=setTimeout(()=>this._saveCloud(o),700); }
+  async _saveCloud(o){ try{ await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:o})}); }catch(e){} }
+  async _loadCloud(){ try{ if(!window.fetch) return; const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok) return; const payload=await r.json(); const data=payload&&payload.data; if(!data||typeof data!=='object'){ await this._saveCloud(this._snapshot()); return; } const next={}; this._DKEYS.forEach(k=>{ if(data[k]!==undefined) next[k]=data[k]; }); if(Object.keys(next).length){ this.state=Object.assign({},this.state,next); try{localStorage.setItem('auroraCalendar.v1',JSON.stringify(this._snapshot()));}catch(e){} this._render(); } }catch(e){} }
+  clearAll(){ try{ localStorage.removeItem('auroraCalendar.v1'); }catch(e){} this._saveCloud({items:[],paychecks:[],payday:{date:'',amount:'',freq:'biweekly',vary:false},remindLead:{d1:true,d3:true,d7:false,custom:false},remindTypes:{bill:true,appt:true,pay:false},homeView:'today',onboarded:false}).finally(()=>location.reload()); }
   setState(u){ super.setState(u); this._persist(); }
 
   build() {
@@ -1064,6 +1069,7 @@ function boot(){
   app._tmpl = document.getElementById('t');
   app._root = document.getElementById('app');
   app._render();
+  app._loadCloud();
   window.__familyCommand = app;   // handy for debugging in the console
 }
 if (document.readyState === 'loading'){
