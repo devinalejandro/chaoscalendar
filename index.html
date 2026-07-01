@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Family Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#000;}
+  .fc-scroll::-webkit-scrollbar{display:none}
+  .fc-scroll{scrollbar-width:none}
+  input,textarea,button{font-family:inherit}
+  @keyframes fcUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes fcFade{from{opacity:0}to{opacity:1}}
+  html{height:100%}
+  body{min-height:100%;display:flex;justify-content:center;}
+  #app{position:relative;width:100%;max-width:402px;min-height:100vh;background:#000;}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<template id="t">
+<div style="position:relative;width:100%;min-height:100vh;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',system-ui,sans-serif;overflow:hidden;">
+
+<!-- ============ ONBOARDING ============ -->
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#000;">
+  <div style="height:0;"></div>
+  <div style="flex:0 0 auto;padding:4px 22px 14px;display:flex;gap:6px;">
+    <sc-for list="{{ obDots }}" as="d" hint-placeholder-count="6">
+      <div style="height:4px;border-radius:2px;flex:1;background:{{ d.bg }};"></div>
+    </sc-for>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:8px 22px 16px;">
+
+    <sc-if value="{{ isOb1 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;padding-top:32px;">
+        <div style="width:64px;height:64px;border-radius:16px;background:#FFD60A;display:flex;align-items:center;justify-content:center;margin-bottom:28px;font-size:34px;">🗒️</div>
+        <h1 style="font-size:32px;line-height:1.15;font-weight:700;margin:0 0 16px;letter-spacing:-0.5px;">Let's organize your family dashboard.</h1>
+        <p style="font-size:17px;line-height:1.5;color:#AEAEB2;margin:0;">Start with the list you already use. We'll help turn it into reminders, bills, paychecks, deals, and schedules.</p>
+        <div style="margin-top:30px;display:flex;flex-direction:column;gap:14px;">
+          <sc-for list="{{ obWelcomeRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div style="width:34px;height:34px;border-radius:9px;background:#1C1C1E;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;">{{ r.icon }}</div>
+              <span style="font-size:15px;color:#EBEBF5;">{{ r.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb2 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.4px;">How do you want to start?</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 22px;">Pick what's easiest. You can change anything later.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ obMethods }}" as="m" hint-placeholder-count="4">
+            <button onClick="{{ m.onClick }}" style="{{ m.style }}">
+              <div style="width:42px;height:42px;border-radius:11px;background:{{ m.iconBg }};display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;">{{ m.icon }}</div>
+              <div style="text-align:left;flex:1;">
+                <div style="font-size:16px;font-weight:600;color:#fff;">{{ m.title }}</div>
+                <div style="font-size:13px;color:#8E8E93;margin-top:2px;">{{ m.sub }}</div>
+              </div>
+              <sc-if value="{{ m.selected }}" hint-placeholder-val="{{ true }}"><span style="color:#FFD60A;font-size:20px;">✓</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb2b }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.4px;">Paste your notes list</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 16px;">From Apple Notes, a text file, or anywhere. We'll sort it out — nothing saves until you approve.</p>
+        <textarea value="{{ pasteText }}" onChange="{{ onPasteChange }}" spellcheck="false" style="width:100%;height:230px;background:#1C1C1E;border:1px solid #2C2C2E;border-radius:14px;color:#fff;font-size:15px;line-height:1.7;padding:16px;resize:none;outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;"></textarea>
+        <button onClick="{{ onParse }}" style="margin-top:14px;width:100%;height:50px;border:none;border-radius:13px;background:#FFD60A;color:#000;font-size:16px;font-weight:600;cursor:pointer;">Preview what we found →</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb3 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.4px;">When do you get paid?</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 22px;">This is how we'll group your bills into windows.</p>
+        <div style="font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 10px;">Frequency</div>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:24px;">
+          <sc-for list="{{ payFreqOptions }}" as="f" hint-placeholder-count="5">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #2C2C2E;">
+            <span style="font-size:16px;">Next paycheck</span><input value="{{ payDate }}" onChange="{{ onPayDate }}" placeholder="YYYY-MM-DD" style="width:140px;text-align:right;background:#2C2C2E;border:none;border-radius:8px;padding:8px 10px;color:#FFD60A;font-size:15px;font-weight:500;outline:none;"/>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #2C2C2E;">
+            <span style="font-size:16px;">Typical amount</span><input value="{{ payAmount }}" onChange="{{ onPayAmount }}" inputmode="decimal" placeholder="0" style="width:140px;text-align:right;background:#2C2C2E;border:none;border-radius:8px;padding:8px 10px;color:#FFD60A;font-size:15px;font-weight:500;outline:none;"/>
+          </div>
+          <button onClick="{{ onToggleVary }}" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#fff;">
+            <span style="font-size:16px;">Amount changes each time</span>
+            <div style="{{ varyTrackStyle }}"><div style="{{ varyKnobStyle }}"></div></div>
+          </button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb4 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 4px;letter-spacing:-0.4px;">Here's what we found</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 18px;">Review before saving. Uncheck anything you don't want.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <sc-for list="{{ parsedBuckets }}" as="b" hint-placeholder-count="6">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin:0 4px 8px;">
+                <span style="width:9px;height:9px;border-radius:3px;background:{{ b.color }};"></span>
+                <span style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.4px;">{{ b.label }}</span>
+                <span style="font-size:13px;color:#8E8E93;">{{ b.countStr }}</span>
+              </div>
+              <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;">
+                <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid #2C2C2E;">
+                    <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.sel }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:14px;font-weight:700;">✓</span></sc-if></button>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ it.title }}</div>
+                      <sc-if value="{{ it.hasMeta }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:#8E8E93;margin-top:1px;">{{ it.meta }}</div></sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb5 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.4px;">When should we remind you?</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 22px;">Gentle nudges, never nagging.</p>
+        <div style="font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 10px;">Lead time</div>
+        <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;margin-bottom:24px;">
+          <sc-for list="{{ remindLeadOptions }}" as="r" hint-placeholder-count="4">
+            <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #2C2C2E;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#fff;">
+              <span style="font-size:16px;">{{ r.label }}</span>
+              <div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 10px;">Remind me about</div>
+        <div style="display:flex;flex-wrap:wrap;gap:9px;">
+          <sc-for list="{{ remindTypeChips }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb6 }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcUp .4s ease both;">
+        <h1 style="font-size:28px;font-weight:700;margin:8px 0 6px;letter-spacing:-0.4px;">What should open first?</h1>
+        <p style="font-size:15px;color:#8E8E93;margin:0 0 22px;">Your home base. Switch anytime from the tab bar.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ homeViewOptions }}" as="h" hint-placeholder-count="4">
+            <button onClick="{{ h.onClick }}" style="{{ h.style }}">
+              <div style="width:42px;height:42px;border-radius:11px;background:{{ h.iconBg }};display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;">{{ h.icon }}</div>
+              <div style="text-align:left;flex:1;">
+                <div style="font-size:16px;font-weight:600;color:#fff;">{{ h.title }}</div>
+                <div style="font-size:13px;color:#8E8E93;margin-top:2px;">{{ h.sub }}</div>
+              </div>
+              <sc-if value="{{ h.selected }}" hint-placeholder-val="{{ true }}"><span style="color:#FFD60A;font-size:20px;">✓</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+  <div style="flex:0 0 auto;padding:12px 22px calc(20px + env(safe-area-inset-bottom));display:flex;gap:12px;background:linear-gradient(to top,#000 60%,transparent);">
+    <sc-if value="{{ obCanBack }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ obBack }}" style="height:52px;padding:0 22px;border:none;border-radius:14px;background:#1C1C1E;color:#fff;font-size:16px;font-weight:600;cursor:pointer;">Back</button>
+    </sc-if>
+    <button onClick="{{ obNext }}" style="flex:1;height:52px;border:none;border-radius:14px;background:#FFD60A;color:#000;font-size:17px;font-weight:600;cursor:pointer;">{{ obNextLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ APP ============ -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#000;">
+  <div style="height:0;"></div></div>
+  <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:6px 20px 10px;background:#000;">
+    <h1 style="font-size:30px;font-weight:700;margin:0;letter-spacing:-0.5px;">{{ tabTitle }}</h1>
+    <div style="display:flex;gap:10px;">
+      <button onClick="{{ openSettings }}" style="width:38px;height:38px;border:none;border-radius:50%;background:#1C1C1E;color:#FFD60A;font-size:17px;cursor:pointer;">⚙</button>
+      <button onClick="{{ onQuickAdd }}" style="width:38px;height:38px;border:none;border-radius:50%;background:#FFD60A;color:#000;font-size:24px;font-weight:300;line-height:1;cursor:pointer;">+</button>
+    </div>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:4px 16px 110px;">
+
+    <!-- TODAY -->
+    <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;display:flex;flex-direction:column;gap:18px;">
+        <div style="background:linear-gradient(160deg,#2C2A12,#1C1C1E);border:1px solid #38371A;border-radius:20px;padding:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:700;color:#FFD60A;text-transform:uppercase;letter-spacing:.5px;">Current Paycheck Window</span>
+            <span style="font-size:13px;color:#8E8E93;">{{ pc.windowStr }}</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin:12px 0 4px;">
+            <span style="font-size:38px;font-weight:700;letter-spacing:-1px;">{{ pc.leftStr }}</span>
+            <span style="font-size:15px;color:#8E8E93;">left to spend</span>
+          </div>
+          <div style="height:8px;border-radius:4px;background:#000;overflow:hidden;margin:10px 0 14px;display:flex;">
+            <div style="width:{{ pc.spentPct }};background:#FF9F0A;"></div>
+            <div style="width:{{ pc.paidPct }};background:#30D158;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <sc-for list="{{ pc.stats }}" as="s" hint-placeholder-count="3">
+              <div><div style="font-size:12px;color:#8E8E93;">{{ s.label }}</div><div style="font-size:17px;font-weight:600;color:{{ s.color }};margin-top:2px;">{{ s.value }}</div></div>
+            </sc-for>
+          </div>
+          <div style="margin-top:12px;font-size:13px;color:#8E8E93;">Next paycheck {{ pc.nextStr }} · {{ pc.countStr }}</div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px;">
+            <span style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;">Due Soon</span>
+            <button onClick="{{ goMoney }}" style="background:none;border:none;color:#FFD60A;font-size:14px;cursor:pointer;">All bills</button>
+          </div>
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ dueSoon }}" as="it" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;">
+                <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:15px;font-weight:700;">✓</span></sc-if></button>
+                <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;">
+                  <div style="{{ it.titleStyle }}">{{ it.title }}</div>
+                  <div style="font-size:13px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div>
+                </div>
+                <span style="{{ it.amountStyle }}">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:0 4px 8px;">
+            <span style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;">Deals Expiring Soon</span>
+            <button onClick="{{ goDeals }}" style="background:none;border:none;color:#FFD60A;font-size:14px;cursor:pointer;">All deals</button>
+          </div>
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ dealsExp }}" as="d" hint-placeholder-count="3">
+              <div onClick="{{ d.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                <div style="width:34px;height:34px;border-radius:9px;background:{{ d.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;">{{ d.icon }}</div>
+                <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:500;">{{ d.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ d.store }}</div></div>
+                <div style="text-align:right;"><div style="font-size:13px;font-weight:600;color:{{ d.expColor }};">{{ d.expStr }}</div><div style="font-size:12px;color:#30D158;">{{ d.savingsStr }}</div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Family Reminders</div>
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ famReminders }}" as="t" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;">
+                <button onClick="{{ t.onToggle }}" style="{{ t.checkStyle }}"><sc-if value="{{ t.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:15px;font-weight:700;">✓</span></sc-if></button>
+                <span style="{{ t.titleStyle }}">{{ t.title }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- MONEY -->
+    <sc-if value="{{ isMoney }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;">
+        <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;" class="fc-scroll">
+          <sc-for list="{{ moneySubs }}" as="s" hint-placeholder-count="5">
+            <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isMoneyPay }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <sc-for list="{{ paychecks }}" as="p" hint-placeholder-count="3">
+              <div onClick="{{ p.onOpen }}" style="background:#1C1C1E;border:1px solid {{ p.border }};border-radius:18px;padding:16px;cursor:pointer;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div><div style="font-size:18px;font-weight:700;">{{ p.dateStr }}</div><div style="font-size:13px;color:#8E8E93;">{{ p.windowStr }}</div></div>
+                  <div style="text-align:right;"><div style="font-size:13px;color:#8E8E93;">Income</div><div style="font-size:18px;font-weight:700;color:#30D158;">{{ p.amountStr }}</div></div>
+                </div>
+                <div style="height:7px;border-radius:4px;background:#000;overflow:hidden;margin:14px 0 12px;display:flex;">
+                  <div style="width:{{ p.paidPct }};background:#30D158;"></div><div style="width:{{ p.unpaidPct }};background:#FF9F0A;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <div><div style="font-size:12px;color:#8E8E93;">Planned</div><div style="font-size:15px;font-weight:600;">{{ p.plannedStr }}</div></div>
+                  <div><div style="font-size:12px;color:#8E8E93;">Paid</div><div style="font-size:15px;font-weight:600;color:#30D158;">{{ p.paidStr }}</div></div>
+                  <div><div style="font-size:12px;color:#8E8E93;">Unpaid</div><div style="font-size:15px;font-weight:600;color:#FF9F0A;">{{ p.unpaidStr }}</div></div>
+                  <div><div style="font-size:12px;color:#8E8E93;">Left</div><div style="font-size:15px;font-weight:600;color:{{ p.leftColor }};">{{ p.leftStr }}</div></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyBills }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ billsList }}" as="it" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;">
+                <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:15px;font-weight:700;">✓</span></sc-if></button>
+                <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;"><div style="{{ it.titleStyle }}">{{ it.title }}</div><div style="font-size:13px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div></div>
+                <span style="{{ it.amountStyle }}">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyEvents }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ eventsList }}" as="it" hint-placeholder-count="3">
+              <div onClick="{{ it.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                <div style="width:34px;height:34px;border-radius:9px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;">{{ it.icon }}</div>
+                <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:500;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.metaStr }}</div></div>
+                <span style="font-size:15px;font-weight:600;">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneySavings }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <sc-for list="{{ savingsGoals }}" as="g" hint-placeholder-count="3">
+              <div onClick="{{ g.onOpen }}" style="background:#1C1C1E;border-radius:16px;padding:16px;cursor:pointer;">
+                <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:16px;font-weight:600;">{{ g.title }}</span><span style="font-size:14px;color:#8E8E93;">{{ g.pctStr }}</span></div>
+                <div style="height:9px;border-radius:5px;background:#000;overflow:hidden;margin:12px 0 8px;"><div style="width:{{ g.pct }};height:100%;background:#FFD60A;"></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:14px;"><span style="color:#30D158;font-weight:600;">{{ g.currentStr }}</span><span style="color:#8E8E93;">of {{ g.targetStr }}</span></div>
+              </div>
+            </sc-for>
+            <button onClick="{{ onAddSaving }}" style="background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;padding:14px;color:#FFD60A;font-size:15px;font-weight:600;cursor:pointer;">＋ New savings goal</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyHistory }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ paidHistory }}" as="it" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;">
+                <span style="width:26px;height:26px;border-radius:50%;background:#30D158;display:flex;align-items:center;justify-content:center;color:#000;font-size:14px;font-weight:700;flex:0 0 auto;">✓</span>
+                <div style="flex:1;"><div style="font-size:15px;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.metaStr }}</div></div>
+                <span style="font-size:15px;color:#8E8E93;">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- CALENDAR -->
+    <sc-if value="{{ isCalendar }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;">
+        <div style="display:flex;gap:8px;padding:2px 0 14px;">
+          <sc-for list="{{ calModes }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isCalMonth }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:20px;padding:16px 12px 14px;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;">
+              <button onClick="{{ onPrevMonth }}" style="background:none;border:none;color:#FFD60A;font-size:24px;line-height:1;cursor:pointer;padding:0 12px;">‹</button><span style="font-size:18px;font-weight:700;letter-spacing:-0.2px;flex:1;text-align:center;">{{ calTitle }}</span><button onClick="{{ onNextMonth }}" style="background:none;border:none;color:#FFD60A;font-size:24px;line-height:1;cursor:pointer;padding:0 12px;">›</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:8px;">
+              <sc-for list="{{ weekdayLabels }}" as="w" hint-placeholder-count="7">
+                <div style="text-align:center;font-size:11px;font-weight:600;color:#8E8E93;text-transform:uppercase;letter-spacing:.4px;">{{ w.l }}</div>
+              </sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:46px;gap:0;border:1px solid #2C2C2E;">
+              <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="35">
+                <button onClick="{{ c.onClick }}" style="{{ c.style }};border:1px solid #2C2C2E;">
+                  <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                  <div style="display:flex;gap:3px;height:5px;margin-top:3px;justify-content:center;align-items:center;">
+                    <sc-for list="{{ c.dots }}" as="d" hint-placeholder-count="2"><span style="width:5px;height:5px;border-radius:50%;background:{{ d.c }};"></span></sc-for>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:12px 16px;margin-top:14px;padding-top:14px;border-top:1px solid #2C2C2E;">
+              <sc-for list="{{ calLegend }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:50%;background:{{ l.c }};"></span><span style="font-size:12px;color:#AEAEB2;">{{ l.label }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCalAgenda }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;padding:10px 16px;margin-bottom:14px;font-size:13px;color:#8E8E93;line-height:1.5;">{{ agendaNote }}</div><div style="background:#1C1C1E;border-radius:16px;overflow:hidden;margin-bottom:14px;"><sc-for list="{{ agendaItems }}" as="it" hint-placeholder-count="3"><div onClick="{{ it.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;"><div style="width:34px;height:34px;border-radius:9px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;">{{ it.icon }}</div><div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:500;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.metaStr }}</div></div><span style="font-size:14px;color:#8E8E93;">{{ it.right }}</span></div></sc-for></div>
+        </sc-if>
+
+        <div style="margin-top:18px;">
+          <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">{{ selectedDateStr }}</div>
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-if value="{{ dayHasItems }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ dayItems }}" as="it" hint-placeholder-count="3">
+                <div onClick="{{ it.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                  <div style="width:34px;height:34px;border-radius:9px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;">{{ it.icon }}</div>
+                  <div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:500;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.typeLabel }}</div></div>
+                  <span style="font-size:14px;color:#8E8E93;">{{ it.right }}</span>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ dayEmpty }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:26px 16px;text-align:center;color:#8E8E93;font-size:14px;">Nothing scheduled. Tap + to add.</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- DEALS -->
+    <sc-if value="{{ isDeals }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;">
+        <div style="background:linear-gradient(160deg,#0E2418,#1C1C1E);border:1px solid #1C4A2E;border-radius:18px;padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font-size:13px;color:#8E8E93;">Estimated savings this month</div><div style="font-size:30px;font-weight:700;color:#30D158;letter-spacing:-0.5px;">{{ dealSavingsStr }}</div></div>
+          <div style="text-align:right;font-size:13px;color:#8E8E93;line-height:1.6;">{{ dealSavedCount }} saved<br>{{ dealExpiringCount }} expiring</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <button onClick="{{ onEmailScan }}" style="flex:1;background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;padding:13px;cursor:pointer;color:#fff;text-align:left;">
+            <div style="font-size:18px;">📧</div><div style="font-size:13px;font-weight:600;margin-top:5px;">Scan email</div><div style="font-size:11px;color:#8E8E93;">Find coupons</div>
+          </button>
+          <button onClick="{{ onWebSearch }}" style="flex:1;background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;padding:13px;cursor:pointer;color:#fff;text-align:left;">
+            <div style="font-size:18px;">🔎</div><div style="font-size:13px;font-weight:600;margin-top:5px;">Search Tucson</div><div style="font-size:11px;color:#8E8E93;">Local deals</div>
+          </button>
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;" class="fc-scroll">
+          <sc-for list="{{ dealCats }}" as="c" hint-placeholder-count="6">
+            <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ dealCards }}" as="d" hint-placeholder-count="5">
+            <div onClick="{{ d.onOpen }}" style="background:#1C1C1E;border-radius:16px;padding:15px;cursor:pointer;border-left:3px solid {{ d.accent }};">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:16px;font-weight:600;">{{ d.title }}</div>
+                  <div style="font-size:13px;color:#8E8E93;margin-top:2px;">{{ d.store }} · {{ d.catLabel }}</div>
+                </div>
+                <span style="{{ d.statusStyle }}">{{ d.statusLabel }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
+                <sc-if value="{{ d.hasCode }}" hint-placeholder-val="{{ true }}"><span style="font-family:ui-monospace,monospace;font-size:13px;background:#000;border:1px dashed #48484A;border-radius:7px;padding:4px 9px;color:#FFD60A;">{{ d.code }}</span></sc-if>
+                <span style="font-size:13px;color:#30D158;font-weight:600;">{{ d.savingsStr }}</span>
+                <span style="margin-left:auto;font-size:13px;font-weight:600;color:{{ d.expColor }};">{{ d.expStr }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- FAMILY -->
+    <sc-if value="{{ isFamily }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;">
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <sc-for list="{{ kids }}" as="k" hint-placeholder-count="3">
+            <button onClick="{{ k.onOpen }}" style="flex:1;background:#1C1C1E;border:none;border-radius:14px;padding:12px;text-align:center;cursor:pointer;color:#fff;">
+              <div style="width:40px;height:40px;border-radius:50%;background:{{ k.color }};display:flex;align-items:center;justify-content:center;margin:0 auto 7px;font-size:16px;font-weight:700;color:#000;">{{ k.initial }}</div>
+              <div style="font-size:14px;font-weight:600;">{{ k.name }}</div><div style="font-size:12px;color:#8E8E93;">{{ k.age }}</div>
+            </button>
+          </sc-for>
+          <button onClick="{{ onAddKid }}" style="width:54px;background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;color:#FFD60A;font-size:22px;cursor:pointer;flex:0 0 auto;">＋</button>
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;" class="fc-scroll">
+          <sc-for list="{{ familySubs }}" as="s" hint-placeholder-count="5">
+            <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isFamActivities }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ onWebSearch }}" style="width:100%;background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;padding:14px;cursor:pointer;color:#fff;text-align:left;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:20px;">🔎</span><div><div style="font-size:15px;font-weight:600;">Find activities in Tucson, AZ</div><div style="font-size:12px;color:#8E8E93;">Sports, swim, camps — saved as cards to review</div></div>
+          </button>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ activityCards }}" as="a" hint-placeholder-count="4">
+              <div onClick="{{ a.onOpen }}" style="background:#1C1C1E;border-radius:16px;padding:15px;cursor:pointer;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                  <div style="display:flex;gap:12px;flex:1;min-width:0;">
+                    <div style="width:40px;height:40px;border-radius:11px;background:{{ a.catBg }};display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;">{{ a.icon }}</div>
+                    <div style="min-width:0;"><div style="font-size:16px;font-weight:600;">{{ a.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ a.org }}</div></div>
+                  </div>
+                  <span style="{{ a.statusStyle }}">{{ a.statusLabel }}</span>
+                </div>
+                <div style="display:flex;gap:14px;margin-top:12px;font-size:13px;color:#AEAEB2;flex-wrap:wrap;">
+                  <span>👶 {{ a.ageStr }}</span><span>💵 {{ a.costStr }}</span><span>📍 {{ a.distStr }}</span><span style="color:{{ a.deadlineColor }};font-weight:600;">⏰ {{ a.deadlineStr }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFamAppts }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+            <sc-for list="{{ appointmentsList }}" as="it" hint-placeholder-count="3">
+              <div onClick="{{ it.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                <div style="width:34px;height:34px;border-radius:9px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto;">{{ it.icon }}</div>
+                <div style="flex:1;"><div style="font-size:15px;font-weight:500;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.metaStr }}</div></div>
+                <span style="font-size:14px;color:#FFD60A;">{{ it.right }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFamResearch }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <sc-for list="{{ researchCols }}" as="col" hint-placeholder-count="3">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.4px;margin:0 4px 8px;">{{ col.label }} · {{ col.count }}</div>
+                <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;">
+                  <sc-for list="{{ col.items }}" as="a" hint-placeholder-count="2">
+                    <div onClick="{{ a.onOpen }}" style="display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                      <span style="font-size:17px;">{{ a.icon }}</span><div style="flex:1;"><div style="font-size:15px;">{{ a.title }}</div><div style="font-size:12px;color:#8E8E93;">{{ a.org }}</div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFamSchool }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;margin-bottom:14px;">
+            <sc-for list="{{ schoolList }}" as="it" hint-placeholder-count="3">
+              <div onClick="{{ it.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+                <span style="font-size:18px;">🎒</span><div style="flex:1;"><div style="font-size:15px;">{{ it.title }}</div><div style="font-size:13px;color:#8E8E93;">{{ it.metaStr }}</div></div>
+                <span style="color:#48484A;font-size:18px;">›</span>
+              </div>
+            </sc-for>
+          </div>
+          <button onClick="{{ onAddSchool }}" style="width:100%;background:#1C1C1E;border:1px dashed #3A3A3C;border-radius:14px;padding:14px;color:#FFD60A;font-size:15px;font-weight:600;cursor:pointer;">＋ Add school item</button>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- LISTS -->
+    <sc-if value="{{ isLists }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:fcFade .3s ease both;">
+        <div style="background:#1C1C1E;border-radius:12px;padding:6px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:15px;">🔍</span><input value="{{ listQuery }}" onChange="{{ onListSearch }}" placeholder="Search lists & items" style="flex:1;background:none;border:none;outline:none;color:#fff;font-size:15px;padding:8px 0;"/>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">My Lists</div>
+        <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+          <sc-for list="{{ listFolders }}" as="f" hint-placeholder-count="8">
+            <div onClick="{{ f.onOpen }}" style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:1px solid #2C2C2E;cursor:pointer;">
+              <div style="width:32px;height:32px;border-radius:8px;background:{{ f.color }};display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto;">{{ f.icon }}</div>
+              <span style="flex:1;font-size:16px;">{{ f.name }}</span>
+              <span style="font-size:15px;color:#8E8E93;">{{ f.count }}</span>
+              <span style="color:#48484A;font-size:18px;">›</span>
+            </div>
+          </sc-for>
+        </div>
+        <button onClick="{{ onNewList }}" style="margin-top:16px;width:100%;background:#1C1C1E;border:none;border-radius:14px;padding:15px;color:#FFD60A;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">＋ New List</button>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- TAB BAR -->
+  <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:rgba(20,20,22,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #2C2C2E;display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom));">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+      <button onClick="{{ t.onClick }}" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:{{ t.color }};">
+        <span style="font-size:21px;line-height:1;">{{ t.icon }}</span>
+        <span style="font-size:10px;font-weight:600;">{{ t.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PAYCHECK DETAIL OVERLAY ============ -->
+<sc-if value="{{ showPaycheckOv }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column;animation:fcUp .3s ease both;z-index:20;">
+  <div style="height:54px;flex:0 0 auto;display:flex;align-items:flex-end;padding:0 16px 6px;font-size:15px;font-weight:600;">9:41</div>
+  <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px;">
+    <button onClick="{{ closeOverlay }}" style="background:none;border:none;color:#FFD60A;font-size:17px;cursor:pointer;">‹ Back</button>
+    <button onClick="{{ onQuickAdd }}" style="background:none;border:none;color:#FFD60A;font-size:15px;cursor:pointer;">Add bill</button>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 40px;">
+    <h1 style="font-size:30px;font-weight:700;margin:4px 4px 2px;">{{ ovPc.dateStr }}</h1>
+    <p style="font-size:15px;color:#8E8E93;margin:0 4px 18px;">{{ ovPc.windowStr }}</p>
+    <div style="background:#1C1C1E;border-radius:18px;padding:18px;margin-bottom:18px;">
+      <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:34px;font-weight:700;color:{{ ovPc.leftColor }};">{{ ovPc.leftStr }}</span><span style="font-size:15px;color:#8E8E93;">left this window</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px;">
+        <div><div style="font-size:12px;color:#8E8E93;">Income</div><div style="font-size:16px;font-weight:600;color:#30D158;">{{ ovPc.amountStr }}</div></div>
+        <div><div style="font-size:12px;color:#8E8E93;">Planned</div><div style="font-size:16px;font-weight:600;">{{ ovPc.plannedStr }}</div></div>
+        <div><div style="font-size:12px;color:#8E8E93;">Paid</div><div style="font-size:16px;font-weight:600;color:#30D158;">{{ ovPc.paidStr }}</div></div>
+        <div><div style="font-size:12px;color:#8E8E93;">Unpaid</div><div style="font-size:16px;font-weight:600;color:#FF9F0A;">{{ ovPc.unpaidStr }}</div></div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Assigned Items</div>
+    <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;">
+      <sc-for list="{{ ovPc.items }}" as="it" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:13px;padding:14px 15px;border-bottom:1px solid #2C2C2E;">
+          <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:15px;font-weight:700;">✓</span></sc-if></button>
+          <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;"><div style="{{ it.titleStyle }}">{{ it.title }}</div><div style="font-size:13px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div></div>
+          <span style="{{ it.amountStyle }}">{{ it.amountStr }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ DEAL DETAIL OVERLAY ============ -->
+<sc-if value="{{ showDealOv }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column;animation:fcUp .3s ease both;z-index:20;">
+  <div style="height:54px;flex:0 0 auto;display:flex;align-items:flex-end;padding:0 16px 6px;font-size:15px;font-weight:600;">9:41</div>
+  <div style="flex:0 0 auto;padding:6px 16px 12px;"><button onClick="{{ closeOverlay }}" style="background:none;border:none;color:#FFD60A;font-size:17px;cursor:pointer;">‹ Deals</button></div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 40px;">
+    <div style="width:60px;height:60px;border-radius:15px;background:{{ ovDeal.catBg }};display:flex;align-items:center;justify-content:center;font-size:30px;margin:4px 0 14px;">{{ ovDeal.icon }}</div>
+    <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">{{ ovDeal.title }}</h1>
+    <p style="font-size:15px;color:#8E8E93;margin:0 0 18px;">{{ ovDeal.store }} · {{ ovDeal.catLabel }}</p>
+    <div style="background:linear-gradient(160deg,#0E2418,#1C1C1E);border-radius:16px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:13px;color:#8E8E93;">Estimated savings</div><div style="font-size:26px;font-weight:700;color:#30D158;">{{ ovDeal.savingsStr }}</div></div>
+      <span style="{{ ovDeal.statusStyle }}">{{ ovDeal.statusLabel }}</span>
+    </div>
+    <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+      <sc-for list="{{ ovDeal.rows }}" as="r" hint-placeholder-count="4">
+        <div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #2C2C2E;"><span style="font-size:15px;color:#8E8E93;">{{ r.label }}</span><span style="font-size:15px;color:{{ r.color }};font-weight:500;text-align:right;max-width:60%;">{{ r.value }}</span></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onClick="{{ ovDeal.onUse }}" style="width:100%;height:50px;border:none;border-radius:13px;background:#30D158;color:#000;font-size:16px;font-weight:600;cursor:pointer;">Mark as used</button>
+      <button onClick="{{ ovDeal.onCalendar }}" style="width:100%;height:50px;border:none;border-radius:13px;background:#1C1C1E;color:#FFD60A;font-size:16px;font-weight:600;cursor:pointer;">Add expiration to calendar</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ACTIVITY DETAIL OVERLAY ============ -->
+<sc-if value="{{ showActivityOv }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column;animation:fcUp .3s ease both;z-index:20;">
+  <div style="height:54px;flex:0 0 auto;display:flex;align-items:flex-end;padding:0 16px 6px;font-size:15px;font-weight:600;">9:41</div>
+  <div style="flex:0 0 auto;padding:6px 16px 12px;"><button onClick="{{ closeOverlay }}" style="background:none;border:none;color:#FFD60A;font-size:17px;cursor:pointer;">‹ Family</button></div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 40px;">
+    <div style="width:60px;height:60px;border-radius:15px;background:{{ ovAct.catBg }};display:flex;align-items:center;justify-content:center;font-size:30px;margin:4px 0 14px;">{{ ovAct.icon }}</div>
+    <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">{{ ovAct.title }}</h1>
+    <p style="font-size:15px;color:#8E8E93;margin:0 0 16px;">{{ ovAct.org }}</p>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <span style="{{ ovAct.statusStyle }}">{{ ovAct.statusLabel }}</span>
+      <sc-if value="{{ ovAct.hasDeal }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#30D158;background:#0E2418;border-radius:8px;padding:5px 10px;">🏷️ {{ ovAct.dealStr }}</span></sc-if>
+    </div>
+    <div style="background:#1C1C1E;border-radius:16px;overflow:hidden;margin-bottom:16px;">
+      <sc-for list="{{ ovAct.rows }}" as="r" hint-placeholder-count="6">
+        <div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #2C2C2E;"><span style="font-size:15px;color:#8E8E93;">{{ r.label }}</span><span style="font-size:15px;color:{{ r.color }};font-weight:500;text-align:right;max-width:60%;">{{ r.value }}</span></div>
+      </sc-for>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <sc-for list="{{ ovAct.actions }}" as="a" hint-placeholder-count="5">
+        <button onClick="{{ a.onClick }}" style="width:100%;background:#1C1C1E;border:none;border-radius:13px;padding:14px 16px;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;"><span style="font-size:18px;">{{ a.icon }}</span>{{ a.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ NOTE DETAIL OVERLAY ============ -->
+<sc-if value="{{ showNoteOv }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column;animation:fcUp .3s ease both;z-index:20;">
+  <div style="height:54px;flex:0 0 auto;display:flex;align-items:flex-end;padding:0 16px 6px;font-size:15px;font-weight:600;">9:41</div>
+  <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px;">
+    <button onClick="{{ closeOverlay }}" style="background:none;border:none;color:#FFD60A;font-size:17px;cursor:pointer;">‹ Lists</button>
+    <button onClick="{{ onQuickAdd }}" style="background:none;border:none;color:#FFD60A;font-size:15px;cursor:pointer;">＋</button>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 20px 40px;">
+    <h1 style="font-size:28px;font-weight:700;margin:4px 0 2px;">{{ ovNote.title }}</h1>
+    <p style="font-size:13px;color:#8E8E93;margin:0 0 18px;">{{ ovNote.dateStr }}</p>
+    <div style="display:flex;flex-direction:column;">
+      <sc-for list="{{ ovNote.items }}" as="it" hint-placeholder-count="5">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #1C1C1E;">
+          <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#000;font-size:14px;font-weight:700;">✓</span></sc-if></button>
+          <div style="flex:1;min-width:0;">
+            <div style="{{ it.titleStyle }}">{{ it.title }}</div>
+            <button onClick="{{ it.onConvert }}" style="margin-top:5px;background:#1C1C1E;border:none;border-radius:7px;padding:4px 10px;color:#FFD60A;font-size:12px;cursor:pointer;">↳ Convert to {{ it.convertTo }}</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ADD/EDIT MODAL ============ -->
+<sc-if value="{{ showModal }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end;z-index:40;animation:fcFade .2s ease both;">
+  <div onClick="{{ closeModal }}" style="flex:1;"></div>
+  <div style="background:#1C1C1E;border-radius:22px 22px 0 0;padding:8px 18px calc(24px + env(safe-area-inset-bottom));animation:fcUp .3s ease both;max-height:88%;overflow-y:auto;" class="fc-scroll">
+    <div style="width:38px;height:5px;border-radius:3px;background:#48484A;margin:6px auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <button onClick="{{ closeModal }}" style="background:none;border:none;color:#8E8E93;font-size:16px;cursor:pointer;">Cancel</button>
+      <span style="font-size:16px;font-weight:700;">{{ modalTitle }}</span>
+      <button onClick="{{ saveModal }}" style="background:none;border:none;color:#FFD60A;font-size:16px;font-weight:600;cursor:pointer;">Save</button>
+    </div>
+    <div style="font-size:12px;color:#8E8E93;text-transform:uppercase;letter-spacing:.4px;margin:0 2px 8px;">Type</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;" class="fc-scroll">
+      <sc-for list="{{ modalTypes }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+      </sc-for>
+    </div>
+    <input value="{{ draftTitle }}" onChange="{{ onDraftTitle }}" placeholder="{{ ph1 }}" style="width:100%;background:#2C2C2E;border:none;border-radius:12px;padding:15px;color:#fff;font-size:16px;outline:none;margin-bottom:10px;"/>
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <input value="{{ draftAmount }}" onChange="{{ onDraftAmount }}" placeholder="{{ ph2 }}" inputmode="decimal" style="flex:1;background:#2C2C2E;border:none;border-radius:12px;padding:15px;color:#fff;font-size:16px;outline:none;"/>
+      <input value="{{ draftDate }}" onChange="{{ onDraftDate }}" placeholder="{{ ph3 }}" style="flex:1;background:#2C2C2E;border:none;border-radius:12px;padding:15px;color:#fff;font-size:16px;outline:none;"/>
+    </div>
+    <textarea value="{{ draftNote }}" onChange="{{ onDraftNote }}" placeholder="{{ ph4 }}" style="width:100%;height:74px;background:#2C2C2E;border:none;border-radius:12px;padding:15px;color:#fff;font-size:16px;outline:none;resize:none;margin-bottom:14px;"></textarea>
+    <div style="background:#2C2C2E;border-radius:12px;overflow:hidden;">
+      <button onClick="{{ onCycleRepeat }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid #3A3A3C;color:#fff;cursor:pointer;"><span style="font-size:15px;">Repeat</span><span style="font-size:15px;color:#8E8E93;">{{ draftRepeat }} ›</span></button>
+      <button onClick="{{ onCycleReminder }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid #3A3A3C;color:#fff;cursor:pointer;"><span style="font-size:15px;">Reminder</span><span style="font-size:15px;color:#8E8E93;">{{ draftReminder }} ›</span></button>
+      <button onClick="{{ onCyclePaycheck }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;color:#fff;cursor:pointer;"><span style="font-size:15px;">Assign to paycheck</span><span style="font-size:15px;color:#FFD60A;">{{ draftPaycheckLabel }} ›</span></button>
+    </div>
+    <sc-if value="{{ canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onDeleteDraft }}" style="width:100%;margin-top:12px;background:none;border:1px solid #3A2A2A;border-radius:12px;padding:14px;color:#FF453A;font-size:16px;font-weight:600;cursor:pointer;">Delete</button></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ INFO SHEET ============ -->
+<sc-if value="{{ showInfo }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end;z-index:50;animation:fcFade .2s ease both;">
+  <div onClick="{{ closeInfo }}" style="flex:1;"></div>
+  <div style="background:#1C1C1E;border-radius:22px 22px 0 0;padding:8px 22px calc(28px + env(safe-area-inset-bottom));animation:fcUp .3s ease both;">
+    <div style="width:38px;height:5px;border-radius:3px;background:#48484A;margin:6px auto 18px;"></div>
+    <div style="font-size:34px;margin-bottom:10px;">{{ infoIcon }}</div>
+    <h2 style="font-size:22px;font-weight:700;margin:0 0 8px;">{{ infoTitle }}</h2>
+    <p style="font-size:15px;color:#AEAEB2;line-height:1.5;margin:0 0 20px;">{{ infoBody }}</p>
+    <button onClick="{{ closeInfo }}" style="width:100%;height:50px;border:none;border-radius:13px;background:#FFD60A;color:#000;font-size:16px;font-weight:600;cursor:pointer;">Got it</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ SETTINGS ============ -->
+<sc-if value="{{ showSettings }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:#000;display:flex;flex-direction:column;animation:fcUp .3s ease both;z-index:30;">
+  <div style="height:54px;flex:0 0 auto;display:flex;align-items:flex-end;padding:0 16px 6px;font-size:15px;font-weight:600;">9:41</div>
+  <div style="flex:0 0 auto;padding:6px 16px 8px;"><button onClick="{{ closeSettings }}" style="background:none;border:none;color:#FFD60A;font-size:17px;cursor:pointer;">‹ Done</button></div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 16px 40px;">
+    <h1 style="font-size:30px;font-weight:700;margin:2px 4px 18px;">Settings</h1>
+    <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Reminder Lead Time</div>
+    <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;margin-bottom:22px;">
+      <sc-for list="{{ remindLeadOptions }}" as="r" hint-placeholder-count="4">
+        <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #2C2C2E;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#fff;"><span style="font-size:16px;">{{ r.label }}</span><div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div></button>
+      </sc-for>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Remind Me About</div>
+    <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;margin-bottom:22px;">
+      <sc-for list="{{ reminderTypeRows }}" as="r" hint-placeholder-count="5">
+        <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #2C2C2E;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#fff;"><span style="font-size:16px;">{{ r.label }}</span><div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div></button>
+      </sc-for>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.5px;margin:0 4px 8px;">Connected (coming soon)</div>
+    <div style="background:#1C1C1E;border-radius:14px;overflow:hidden;margin-bottom:22px;">
+      <button onClick="{{ onConnectedInfo }}" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #2C2C2E;color:#fff;cursor:pointer;"><span style="font-size:16px;">📧 Email deal scan</span><span style="font-size:14px;color:#8E8E93;">Coming soon ›</span></button>
+      <button onClick="{{ onConnectedInfo }}" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;color:#fff;cursor:pointer;"><span style="font-size:16px;">🔎 Tucson web search</span><span style="font-size:14px;color:#8E8E93;">Coming soon ›</span></button>
+    </div>
+    <button onClick="{{ onRestart }}" style="width:100%;background:#1C1C1E;border:none;border-radius:14px;padding:15px;color:#FFD60A;font-size:16px;cursor:pointer;">Replay onboarding</button>
+    <button onClick="{{ onClearData }}" style="width:100%;margin-top:12px;background:#1C1C1E;border:none;border-radius:14px;padding:15px;color:#FF453A;font-size:16px;cursor:pointer;">Clear all data &amp; start fresh</button>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</template>
+
+<script>
+(function(){
+'use strict';
+
+/* ===========================================================================
+   Minimal Claude Design Component (.dc) runtime
+   Implements just enough of the template engine to run this component
+   standalone: {{ expr }} interpolation, <sc-if>, <sc-for>, onClick/onChange
+   event binding, dynamic style (string or object), and value binding.
+   =========================================================================== */
+
+// Resolve a dotted path ("a.b.c") against a context object (prototype-aware).
+function resolve(path, ctx){
+  var parts = path.trim().split('.');
+  var v = ctx;
+  for (var i = 0; i < parts.length; i++){
+    if (v == null) return undefined;
+    v = v[parts[i]];
+  }
+  return v;
+}
+
+// Strip the {{ }} delimiters from a single-expression attribute value.
+function stripTpl(s){
+  return (s || '').trim().replace(/^\{\{\s*/, '').replace(/\s*\}\}$/, '');
+}
+
+// Interpolate every {{ path }} occurrence inside a string.
+function interp(str, ctx){
+  return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, function(_m, p){
+    var v = resolve(p, ctx);
+    return v != null ? v : '';
+  });
+}
+
+// Apply a style value that may be a CSS string or a JS style object.
+function applyStyle(el, val){
+  if (typeof val === 'string') el.setAttribute('style', val);
+  else if (val && typeof val === 'object') Object.assign(el.style, val);
+}
+
+// True when the whole attribute value is a single {{ path }} expression.
+var SINGLE = /^\{\{\s*[\w.]+\s*\}\}$/;
+
+// Recursively process a template node against a context, returning live DOM.
+function proc(node, ctx){
+  // Text node — interpolate if it contains a template expression.
+  if (node.nodeType === 3){
+    var t = node.textContent;
+    return document.createTextNode(t.indexOf('{{') >= 0 ? interp(t, ctx) : t);
+  }
+  if (node.nodeType !== 1) return null;
+
+  var tag = node.tagName.toLowerCase();
+
+  // <sc-if value="{{ cond }}"> — conditional render.
+  if (tag === 'sc-if'){
+    if (!resolve(stripTpl(node.getAttribute('value')), ctx)){
+      return document.createDocumentFragment();
+    }
+    var fIf = document.createDocumentFragment();
+    for (var i = 0; i < node.childNodes.length; i++){
+      var rIf = proc(node.childNodes[i], ctx);
+      if (rIf) fIf.appendChild(rIf);
+    }
+    return fIf;
+  }
+
+  // <sc-for list="{{ arr }}" as="item"> — list render with scoped context.
+  if (tag === 'sc-for'){
+    var list = resolve(stripTpl(node.getAttribute('list')), ctx);
+    var as_ = node.getAttribute('as') || 'item';
+    var fFor = document.createDocumentFragment();
+    if (Array.isArray(list)){
+      for (var k = 0; k < list.length; k++){
+        var ic = Object.create(ctx);     // child scope shadows outer ctx
+        ic[as_] = list[k];
+        for (var j = 0; j < node.childNodes.length; j++){
+          var rFor = proc(node.childNodes[j], ic);
+          if (rFor) fFor.appendChild(rFor);
+        }
+      }
+    }
+    return fFor;
+  }
+
+  // Regular element.
+  var el = document.createElement(tag);
+  var pendingVal;
+  for (var a = 0; a < node.attributes.length; a++){
+    var attr = node.attributes[a];
+    var n = attr.name, v = attr.value;
+
+    if (n.indexOf('hint-') === 0) continue;          // design-only hints
+
+    // Static attribute (no template) — copy through, skip literal handlers.
+    if (v.indexOf('{{') < 0){
+      if (!/^on[A-Za-z]/.test(n)) el.setAttribute(n, v);
+      continue;
+    }
+
+    var single = SINGLE.test(v.trim());
+    var resolved = single ? resolve(stripTpl(v), ctx) : null;
+    var ln = n.toLowerCase();
+
+    // Event handlers: onClick -> click, onChange -> change (fires on blur,
+    // which avoids tearing down focused inputs on every keystroke).
+    if (ln.indexOf('on') === 0){
+      var evs = (ln === 'onchange') ? ['change'] : [ln.slice(2)];
+      if (typeof resolved === 'function'){
+        for (var e = 0; e < evs.length; e++) el.addEventListener(evs[e], resolved);
+      }
+      continue;
+    }
+
+    if (n === 'style'){ applyStyle(el, single ? resolved : interp(v, ctx)); continue; }
+    if (n === 'value' && single){ pendingVal = resolved; continue; }
+
+    var val = single ? resolved : interp(v, ctx);
+    if (val != null) el.setAttribute(n, String(val));
+  }
+
+  for (var c = 0; c < node.childNodes.length; c++){
+    var rc = proc(node.childNodes[c], ctx);
+    if (rc) el.appendChild(rc);
+  }
+
+  // Inputs/textareas need their value set as a property, not an attribute.
+  if (pendingVal != null) el.value = String(pendingVal);
+  return el;
+}
+
+/* ===========================================================================
+   DCLogic base class — state + batched re-render lifecycle.
+   =========================================================================== */
+class DCLogic {
+  constructor(){ this._pend = false; }
+
+  setState(u){
+    var next = (typeof u === 'function') ? u(this.state) : u;
+    this.state = Object.assign({}, this.state, next);
+    if (!this._pend){
+      this._pend = true;
+      requestAnimationFrame(function(self){ return function(){ self._pend = false; self._render(); }; }(this));
+    }
+  }
+
+  _render(){
+    var vals = this.renderVals();
+    var clone = this._tmpl.content.cloneNode(true);
+    var f = document.createDocumentFragment();
+    for (var i = 0; i < clone.childNodes.length; i++){
+      var r = proc(clone.childNodes[i], vals);
+      if (r) f.appendChild(r);
+    }
+    this._root.textContent = '';
+    this._root.appendChild(f);
+  }
+}
+
+
+/* ======================= component (v2) ======================= */
+class Component extends DCLogic {
+  state = this.build();
+
+  // ---- persistence ----
+  _DKEYS = ['items','paychecks','deals','activities','lists','savingsGoals','kids','schoolItems','payday','remindLead','remindTypes','homeView','onboarded'];
+  _load(){ try{ const r=localStorage.getItem('familyCommand.v2'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+  _persist(){ try{ const o={}; this._DKEYS.forEach(k=>o[k]=this.state[k]); localStorage.setItem('familyCommand.v2', JSON.stringify(o)); }catch(e){} }
+  clearAll(){ try{ localStorage.removeItem('familyCommand.v2'); }catch(e){} location.reload(); }
+  setState(u){ super.setState(u); this._persist(); }
+
+  build() {
+    const items = [];
+    const paychecks = [];
+    const deals = [];
+    const activities = [];
+    const lists = [];
+    const savingsGoals = [];
+    const kids = [];
+    const schoolItems = [];
+    const payday = {date:'',amount:'',freq:'biweekly',vary:false};
+    const DEFAULT_NOTE = '';
+
+    const seed = {items,paychecks,deals,activities,lists,savingsGoals,kids,schoolItems,payday,
+      remindLead:{d1:true,d3:true,d7:false,custom:false}, remindTypes:{bill:true,deal:true,appt:true,reg:true,pay:false},
+      homeView:'today', onboarded:false};
+
+    const saved = this._load();
+    const data = saved ? {
+      items:saved.items||items, paychecks:saved.paychecks||paychecks, deals:saved.deals||deals,
+      activities:saved.activities||activities, lists:saved.lists||lists, savingsGoals:saved.savingsGoals||savingsGoals,
+      kids:saved.kids||kids, schoolItems:saved.schoolItems||schoolItems, payday:saved.payday||payday,
+      remindLead:saved.remindLead||seed.remindLead, remindTypes:saved.remindTypes||seed.remindTypes,
+      homeView:saved.homeView||'today', onboarded:!!saved.onboarded,
+    } : seed;
+
+    const parsed = this.parseNote(DEFAULT_NOTE);
+    const parsedSel = {}; parsed.forEach(p=>parsedSel[p._i]=true);
+    const now = new Date();
+    const homeTab = data.homeView==='paycheck'?'money':(data.homeView==='calendar'?'calendar':(data.homeView==='notes'?'lists':'today'));
+
+    const transient = {
+      obStep:1, obMethod:'paste', pasteText:DEFAULT_NOTE, parsed, parsedSel,
+      tab:homeTab, moneySub:'paychecks', familySub:'appts',
+      calMode:'month', calYear:now.getFullYear(), calMonth0:now.getMonth(),
+      selectedDate:this.iso(now), dealCat:'all',
+      overlay:null, modal:null, draft:null, settings:false, info:null, listQuery:'', DEFAULT_NOTE,
+    };
+    return {...transient, ...data, phase: data.onboarded?'app':'onboarding'};
+  }
+
+  // ---- date helpers ----
+  pad(n){ return String(n).padStart(2,'0'); }
+  iso(d){ return d.getFullYear()+'-'+this.pad(d.getMonth()+1)+'-'+this.pad(d.getDate()); }
+  today(){ return this.iso(new Date()); }
+  addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return this.iso(d); }
+  normDate(s){ if(!s) return null; const m=String(s).match(/(\d{1,2})\/(\d{1,2})/); if(!m) return null; const y=new Date().getFullYear(); return y+'-'+this.pad(m[1])+'-'+this.pad(m[2]); }
+
+  // ---- display helpers ----
+  money(n){ if(n==null||isNaN(n)) return ''; return '$'+Number(n).toLocaleString('en-US'); }
+  md(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+  wd(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
+  daysUntil(iso){ if(!iso) return 999; return Math.round((new Date(iso+'T00:00:00')-new Date(this.today()+'T00:00:00'))/86400000); }
+  catColor(c){ return ({housing:'#FF453A',utilities:'#0A84FF',medical:'#5AC8FA',auto:'#FF9F0A',groceries:'#30D158',activity:'#BF5AF2',family:'#FFD60A',school:'#BF5AF2',kids:'#FF9F0A',household:'#8E8E93'})[c]||'#FFD60A'; }
+  catBg(c){ const h=this.catColor(c); return h+'22'; }
+  catIcon(c){ return ({housing:'🏠',utilities:'⚡',medical:'🦷',auto:'🚗',groceries:'🛒',activity:'⚽',family:'⭐',school:'🎒',kids:'👕',household:'🧴'})[c]||'📌'; }
+  dealIcon(c){ return ({groceries:'🛒',kids:'👕',family:'🎟️',household:'🧴',medical:'🦷'})[c]||'🏷️'; }
+  actIcon(t){ return ({Soccer:'⚽',Swimming:'🏊',Gymnastics:'🤸',Tennis:'🎾'})[t]||'🏅'; }
+  pickColor(){ const p=['#FF9F0A','#30D158','#FF453A','#0A84FF','#BF5AF2','#5AC8FA','#FFD60A']; const n=this.state&&this.state.kids?this.state.kids.length:0; return p[n%p.length]; }
+  defaultCat(t){ return ({bill:'utilities',event:'activity',appointment:'medical',task:'family'})[t]||'family'; }
+
+  chkStyle(paid){ const b={width:'26px',height:'26px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto',cursor:'pointer',border:'2px solid #48484A',background:'transparent',padding:'0'}; return paid?{...b,border:'2px solid #FFD60A',background:'#FFD60A'}:b; }
+  titleStyle(paid){ return paid?{fontSize:'15px',textDecoration:'line-through',color:'#8E8E93'}:{fontSize:'15px',color:'#fff'}; }
+  amtStyle(paid){ return {fontSize:'15px',fontWeight:'600',color:paid?'#8E8E93':'#fff'}; }
+  metaColor(it){ if(it.paid) return '#8E8E93'; const d=this.daysUntil(it.dueDate); return d<=3?'#FF9F0A':'#8E8E93'; }
+  billMeta(it){ if(it.paid) return 'Paid '+this.md(it.paidDate||it.dueDate); if(!it.dueDate) return ''; const d=this.daysUntil(it.dueDate); return d<0?'Overdue':(d===0?'Due today':(d===1?'Due tomorrow':'Due '+this.md(it.dueDate))); }
+
+  chkVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,amountStr:this.money(it.amount),metaStr:this.billMeta(it),metaColor:this.metaColor(it),checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),amountStyle:this.amtStyle(paid),onToggle:()=>this.togglePaid(it.id),onOpen:()=>this.openModal(it.id)}; }
+  taskVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),onToggle:()=>this.togglePaid(it.id)}; }
+  pcCalc(pc){ const its=this.state.items.filter(i=>i.pc===pc.id&&i.amount); const planned=its.reduce((s,i)=>s+i.amount,0); const paid=its.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0); const unpaid=planned-paid; const left=pc.amount-planned; const uc=its.filter(i=>!i.paid).length; const pcnt=its.filter(i=>i.paid).length; return {planned,paid,unpaid,left,uc,pcnt,its}; }
+
+  // ---- paycheck scheduling ----
+  generatePaychecks(payday){
+    const freq=payday.freq||'biweekly'; const amount=+payday.amount||0; const base=payday.date||this.today(); const out=[];
+    if(freq==='monthly'){
+      let d=new Date(base+'T00:00:00'); d.setMonth(d.getMonth()-1);
+      for(let i=0;i<10;i++){ const start=this.iso(d); const e=new Date(d); e.setMonth(e.getMonth()+1); e.setDate(e.getDate()-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setMonth(d.getMonth()+1); }
+    } else {
+      const step = freq==='weekly'?7:(freq==='twicemonthly'?15:14);
+      let d=new Date(base+'T00:00:00'); d.setDate(d.getDate()-step);
+      for(let i=0;i<12;i++){ const start=this.iso(d); const e=new Date(d); e.setDate(e.getDate()+step-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setDate(d.getDate()+step); }
+    }
+    return out;
+  }
+  assignPc(items,paychecks){ return items.map(i=>{ if(!i.dueDate) return {...i,pc:(i.pc&&paychecks.find(p=>p.id===i.pc))?i.pc:null}; const w=paychecks.find(p=>i.dueDate>=p.start&&i.dueDate<=p.end); return {...i,pc:w?w.id:null}; }); }
+  planningPaycheck(){ const t=this.today(); const fut=this.state.paychecks.filter(p=>p.end>=t).sort((a,b)=>a.start.localeCompare(b.start)); const withItems=fut.find(p=>this.state.items.some(i=>i.pc===p.id&&i.amount)); return withItems||fut[0]||this.state.paychecks[this.state.paychecks.length-1]||null; }
+
+  parseNote(text){
+    const lines=(text||'').split('\n').map(l=>l.trim()).filter(Boolean);
+    const amtRe=/\$?\b(\d{2,4})\b/; const dateRe=/\b(\d{1,2})\/(\d{1,2})\b/;
+    return lines.map((line,_i)=>{
+      const low=line.toLowerCase(); const dm=line.match(dateRe); const date=dm?dm[0]:null;
+      let type='unknown',title=line,amount=null;
+      if(low.includes('paycheck')){type='paycheck';title='Paycheck';}
+      else if(low.includes('paid')){type='paid';title=line.replace(/paid/i,'').trim();}
+      else if(low.includes('due')){type='bill';const am=line.match(amtRe);amount=am?+am[1]:null;title=line.replace(amtRe,'').replace(/due.*$/i,'').trim();}
+      else if(low.includes('coupon')||low.includes('deal')||low.includes('% off')||low.includes('expires')||low.includes('groupon')){type='deal';title=line;}
+      else if(low.startsWith('check')||low.startsWith('call')||low.startsWith('look')||low.includes('signup')){type='task';title=line;}
+      else if(low.includes('dentist')||low.includes('doctor')||low.includes('appointment')||(dm&&amtRe.test(line))){type='event';const am=line.match(amtRe);amount=am?+am[1]:null;title=line.replace(amtRe,'').replace(dateRe,'').trim();}
+      return {type,title:title||line,amount,date,raw:line,_i};
+    });
+  }
+
+  // ---- actions ----
+  togglePaid(id){ this.setState(s=>({items:s.items.map(i=>i.id===id?{...i,paid:!i.paid,paidDate:!i.paid?this.today():null}:i)})); }
+  go(tab){ this.setState({tab,overlay:null,settings:false}); }
+  openOverlay(kind,id){ this.setState({overlay:{kind,id}}); }
+  closeOverlay(){ this.setState({overlay:null}); }
+  openModal(id){ const it=id?this.state.items.find(i=>i.id===id):null; const pc=this.planningPaycheck(); this.setState({modal:true,draft:it?{...it,repeat:it.repeat||'None',reminder:it.reminder||'3 days before'}:{type:'bill',title:'',amount:'',dueDate:'',note:'',repeat:'None',reminder:'3 days before',pc:pc?pc.id:null}}); }
+  openDealEdit(id){ const d=id?this.state.deals.find(x=>x.id===id):null; this.setState({overlay:null,modal:true,draft:d?{...d,type:'deal',amount:d.savings,dueDate:d.exp,note:d.store}:{type:'deal',title:'',amount:'',dueDate:'',note:'',cat:'groceries',status:'saved',code:'',link:''}}); }
+  openActivityEdit(id){ const a=id?this.state.activities.find(x=>x.id===id):null; this.setState({overlay:null,modal:true,draft:a?{...a,type:'activity',amount:a.cost,dueDate:a.deadline,note:a.org}:{type:'activity',title:'',amount:'',dueDate:'',note:'',status:'researching',atype:'Other'}}); }
+  openSaving(id){ const g=id?this.state.savingsGoals.find(x=>x.id===id):null; this.setState({modal:true,draft:g?{...g,type:'savings',title:g.title,amount:g.tar,dueDate:String(g.cur),note:''}:{type:'savings',title:'',amount:'',dueDate:'',note:''}}); }
+  openKid(id){ const k=id?this.state.kids.find(x=>x.id===id):null; this.setState({modal:true,draft:k?{...k,type:'kid',title:k.name,amount:k.age,dueDate:'',note:''}:{type:'kid',title:'',amount:'',dueDate:'',note:''}}); }
+  openSchool(id){ const x=id?this.state.schoolItems.find(s=>s.id===id):null; this.setState({modal:true,draft:x?{...x,type:'school',title:x.title,amount:'',dueDate:'',note:x.meta}:{type:'school',title:'',amount:'',dueDate:'',note:''}}); }
+  openListNew(){ this.setState({modal:true,draft:{type:'list',title:'',amount:'',dueDate:'',note:''}}); }
+  closeModal(){ this.setState({modal:null,draft:null}); }
+
+  saveModal(){
+    const d=this.state.draft; if(!d){ this.setState({modal:null}); return; }
+    const t=d.type; const id=d.id;
+    const amt=(d.amount!==''&&d.amount!=null&&!isNaN(+d.amount))?+d.amount:null;
+    if(t==='deal'){ const rec={id:id||'d'+Date.now(),title:d.title||'Untitled deal',store:d.note||'',cat:d.cat||'groceries',code:d.code||'',exp:d.dueDate||'',savings:amt||0,status:d.status||'saved',link:d.link||'',notes:d.notes||''}; this.setState(s=>({deals:id?s.deals.map(x=>x.id===id?{...x,...rec}:x):[...s.deals,rec],modal:null,draft:null})); return; }
+    if(t==='activity'){ const rec={id:id||'act'+Date.now(),title:d.title||'Untitled',org:d.note||'',atype:d.atype||'Other',age:d.age||'',season:d.season||'',cost:amt||0,loc:d.loc||'',dist:d.dist||'',deadline:d.dueDate||'',status:d.status||'researching',deal:d.deal||'',practice:d.practice||'',equip:d.equip||'',contact:d.contact||'',notes:d.notes||''}; this.setState(s=>({activities:id?s.activities.map(x=>x.id===id?{...x,...rec}:x):[...s.activities,rec],modal:null,draft:null})); return; }
+    if(t==='savings'){ const tar=amt||0; const cur=(d.dueDate!==''&&!isNaN(+d.dueDate))?+d.dueDate:(d.cur||0); const rec={id:id||'sg'+Date.now(),title:d.title||'Goal',cur,tar}; this.setState(s=>({savingsGoals:id?s.savingsGoals.map(x=>x.id===id?{...x,...rec}:x):[...s.savingsGoals,rec],modal:null,draft:null})); return; }
+    if(t==='kid'){ const name=d.title||'Child'; const rec={id:id||'k'+Date.now(),name,age:d.amount||'',initial:(name[0]||'?').toUpperCase(),color:d.color||this.pickColor()}; this.setState(s=>({kids:id?s.kids.map(x=>x.id===id?{...x,...rec}:x):[...s.kids,rec],modal:null,draft:null})); return; }
+    if(t==='school'){ const rec={id:id||'sc'+Date.now(),title:d.title||'Item',meta:d.note||''}; this.setState(s=>({schoolItems:id?s.schoolItems.map(x=>x.id===id?{...x,...rec}:x):[...s.schoolItems,rec],modal:null,draft:null})); return; }
+    if(t==='list'){ const rec={id:id||'l'+Date.now(),name:d.title||'New list',icon:d.icon||'🗒️',color:d.color||this.pickColor(),itemIds:d.itemIds||[]}; this.setState(s=>({lists:id?s.lists.map(x=>x.id===id?{...x,...rec}:x):[...s.lists,rec],modal:null,draft:null})); return; }
+    if(t==='paycheck'){ const pd={...this.state.payday,date:d.dueDate||this.state.payday.date,amount:amt||this.state.payday.amount}; const pcs=this.generatePaychecks(pd); const items=this.assignPc(this.state.items,pcs); this.setState({payday:pd,paychecks:pcs,items,modal:null,draft:null}); return; }
+    // generic item types
+    const pcs=this.state.paychecks; let pc=(t==='bill'||t==='event')?(d.pc||null):null;
+    if((t==='bill'||t==='event')&&!pc&&d.dueDate){ const w=pcs.find(p=>d.dueDate>=p.start&&d.dueDate<=p.end); pc=w?w.id:null; }
+    const base={type:t,title:d.title||'Untitled',amount:amt,dueDate:d.dueDate||'',note:d.note||'',category:d.category||this.defaultCat(t),time:d.time||'',repeat:d.repeat||'None',reminder:d.reminder||'',pc};
+    if(id){ this.setState(s=>({items:s.items.map(i=>i.id===id?{...i,...base}:i),modal:null,draft:null})); }
+    else { this.setState(s=>({items:[...s.items,{...base,id:'n'+Date.now(),paid:false}],modal:null,draft:null})); }
+  }
+  onDeleteDraft(){ const d=this.state.draft; if(!d||!d.id){ this.setState({modal:null,draft:null}); return; } const id=d.id; const map={deal:'deals',activity:'activities',savings:'savingsGoals',kid:'kids',school:'schoolItems',list:'lists'}; const coll=map[d.type]||'items'; this.setState(s=>({[coll]:s[coll].filter(x=>x.id!==id),modal:null,draft:null})); }
+
+  openSettings(){ this.setState({settings:true}); }
+  closeSettings(){ this.setState({settings:false}); }
+
+  pickFile(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.txt,.md,text/plain,text/markdown'; inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ const text=String(rd.result||''); const parsed=this.parseNote(text); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({pasteText:text,parsed,parsedSel:sel,obMethod:'paste',obStep:2.5}); }; rd.readAsText(f); }; inp.click(); }
+
+  importParsed(){
+    const s=this.state; const sel=s.parsedSel||{}; const parsed=(s.parsed||[]).filter(p=>sel[p._i]!==false&&p.type!=='unknown'&&p.type!=='paycheck');
+    const has=(arr,t)=>arr.some(x=>(x.title||x.name||'').toLowerCase()===t.toLowerCase());
+    const newItems=[]; const newDeals=[]; let seq=0;
+    parsed.forEach(p=>{ const uid=()=>'imp'+Date.now()+(seq++);
+      if(p.type==='bill'||p.type==='event'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:p.type==='event'?'event':'bill',title:p.title,amount:p.amount||null,dueDate:this.normDate(p.date),paid:false,category:p.type==='event'?'activity':'utilities',pc:null}); }
+      else if(p.type==='paid'){ if(p.title&&!has(s.items,p.title)) newItems.push({id:uid(),type:'bill',title:p.title,amount:p.amount||null,dueDate:null,paid:true,paidDate:this.today(),category:'utilities',pc:null}); }
+      else if(p.type==='task'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:'task',title:p.title,paid:false,category:'family'}); }
+      else if(p.type==='deal'){ if(!has(s.deals,p.title)) newDeals.push({id:'impd'+Date.now()+(seq++),title:p.title,store:'',cat:'family',code:'',exp:this.normDate(p.date)||'',savings:p.amount||0,status:'saved',link:'',notes:'Imported from notes'}); }
+    });
+    if(newItems.length||newDeals.length) this.setState(st=>({items:[...st.items,...newItems],deals:[...st.deals,...newDeals]}));
+  }
+
+  finishOnboarding(){ const s=this.state; const pcs=this.generatePaychecks(s.payday); const items=this.assignPc(s.items,pcs); const tab=s.homeView==='paycheck'?'money':(s.homeView==='calendar'?'calendar':(s.homeView==='notes'?'lists':'today')); this.setState({paychecks:pcs,items,onboarded:true,phase:'app',tab,moneySub:'paychecks',obStep:1}); }
+
+  obNext(){ const s=this.state; if(s.phase!=='onboarding') return; const step=s.obStep;
+    if(step===2){
+      if(s.obMethod==='paste'){ this.setState({obStep:2.5}); return; }
+      if(s.obMethod==='upload'){ this.pickFile(); return; }
+      if(s.obMethod==='email'){ this.setState({info:{icon:'📧',title:'Email connect — coming soon',body:'You can finish setup now and connect email later. We\'ll start you with manual entry.'},parsed:[],parsedSel:{},obStep:3}); return; }
+      this.setState({parsed:[],parsedSel:{},obStep:3}); return;
+    }
+    if(step===2.5){ const parsed=this.parseNote(s.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({parsed,parsedSel:sel,obStep:3}); return; }
+    if(step===4){ this.importParsed(); this.setState({obStep:5}); return; }
+    if(step>=6){ this.finishOnboarding(); return; }
+    this.setState({obStep:step+1});
+  }
+  obBack(){ const s=this.state; if(s.obStep===2.5){this.setState({obStep:2});return;} if(s.obStep===3&&s.obMethod==='paste'){this.setState({obStep:2.5});return;} this.setState({obStep:Math.max(1,Math.floor(s.obStep)-1)}); }
+
+  renderVals(){
+    const S=this.state;
+    const isOnboarding=S.phase==='onboarding';
+    const isApp=S.phase==='app';
+    const step=S.obStep;
+    const dotN=Math.min(6,Math.round(step));
+    const obDots=[1,2,3,4,5,6].map(i=>({bg:i<=dotN?'#FFD60A':'#2C2C2E'}));
+    const v={ isOnboarding, isApp, obDots,
+      isOb1:step===1, isOb2:step===2, isOb2b:step===2.5, isOb3:step===3, isOb4:step===4, isOb5:step===5, isOb6:step===6,
+      obCanBack:step>1, obNext:()=>this.obNext(), obBack:()=>this.obBack(),
+      obNextLabel: step===6?'Open Family Command':(step===4?'Save these items':'Continue'),
+      obWelcomeRows:[{icon:'💵',text:'Bills grouped by paycheck'},{icon:'📅',text:'Due dates on a calendar'},{icon:'👨‍👩‍👧',text:'Family & appointments in one place'},{icon:'🗒️',text:'Lists for everything'}],
+    };
+    const trackOn={width:'48px',height:'29px',borderRadius:'15px',background:'#30D158',position:'relative',transition:'.2s',flex:'0 0 auto'};
+    const trackOff={width:'48px',height:'29px',borderRadius:'15px',background:'#3A3A3C',position:'relative',transition:'.2s',flex:'0 0 auto'};
+    const knobOn={width:'25px',height:'25px',borderRadius:'50%',background:'#fff',position:'absolute',top:'2px',left:'21px',transition:'.2s'};
+    const knobOff={width:'25px',height:'25px',borderRadius:'50%',background:'#fff',position:'absolute',top:'2px',left:'2px',transition:'.2s'};
+
+    // ob2 methods
+    const methods=[{key:'paste',icon:'📋',title:'Paste my notes list',sub:'From Apple Notes or anywhere'},{key:'upload',icon:'📄',title:'Upload a .txt or .md file',sub:'We parse it for you'},{key:'manual',icon:'✏️',title:'Start manually',sub:'Add items one at a time'},{key:'email',icon:'📧',title:'Connect email later',sub:'For deals & reminders'}];
+    v.obMethods=methods.map(m=>{const sel=S.obMethod===m.key;return {...m,selected:sel,iconBg:sel?'#FFD60A':'#2C2C2E',onClick:()=>this.setState({obMethod:m.key}),style:`width:100%;display:flex;align-items:center;gap:14px;background:#1C1C1E;border:1.5px solid ${sel?'#FFD60A':'transparent'};border-radius:15px;padding:14px;cursor:pointer;`};});
+    v.pasteText=S.pasteText;
+    v.onPasteChange=e=>this.setState({pasteText:e.target.value});
+    v.onParse=()=>{ const parsed=this.parseNote(S.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({parsed,parsedSel:sel,obStep:3}); };
+    // ob3 payday
+    const freqs=[{key:'weekly',label:'Weekly'},{key:'biweekly',label:'Biweekly'},{key:'twicemonthly',label:'Twice monthly'},{key:'monthly',label:'Monthly'},{key:'custom',label:'Custom'}];
+    v.payFreqOptions=freqs.map(f=>{const sel=S.payday.freq===f.key;return {...f,onClick:()=>this.setState({payday:{...S.payday,freq:f.key}}),style:`padding:10px 16px;border-radius:11px;border:1.5px solid ${sel?'#FFD60A':'#2C2C2E'};background:${sel?'#FFD60A':'#1C1C1E'};color:${sel?'#000':'#fff'};font-size:15px;font-weight:600;cursor:pointer;`};});
+    v.payDate=S.payday.date||''; v.payAmount=S.payday.amount!=null?String(S.payday.amount):'';
+    v.onPayDate=e=>this.setState({payday:{...S.payday,date:e.target.value}});
+    v.onPayAmount=e=>this.setState({payday:{...S.payday,amount:e.target.value===''?'':(+e.target.value||0)}});
+    v.varyTrackStyle=S.payday.vary?trackOn:trackOff; v.varyKnobStyle=S.payday.vary?knobOn:knobOff; v.onToggleVary=()=>this.setState({payday:{...S.payday,vary:!S.payday.vary}});
+    // ob4 parsed buckets (selectable)
+    const order=[['paycheck','Paychecks','#30D158'],['bill','Bills','#FF453A'],['event','Financial events','#5AC8FA'],['paid','Already paid','#8E8E93'],['task','Family tasks','#FFD60A'],['deal','Deals & coupons','#FF9F0A'],['unknown','Needs review','#48484A']];
+    const parsed=S.parsed||[];
+    v.parsedBuckets=order.map(([k,label,color])=>{const its=parsed.filter(p=>p.type===k);return {key:k,label,color,count:its.length,countStr:its.length+'',items:its.map(p=>{const meta=[p.amount?this.money(p.amount):'',p.date?'· '+p.date:''].filter(Boolean).join(' ');const sel=S.parsedSel[p._i]!==false;return {title:p.title,meta,hasMeta:!!meta,sel,checkStyle:this.chkStyle(sel),onToggle:()=>this.setState({parsedSel:{...S.parsedSel,[p._i]:!sel}})};})};}).filter(b=>b.count>0);
+    // ob5 reminders
+    const leads=[{key:'d1',label:'1 day before'},{key:'d3',label:'3 days before'},{key:'d7',label:'1 week before'},{key:'custom',label:'Custom reminders'}];
+    v.remindLeadOptions=leads.map(l=>{const on=S.remindLead[l.key];return {...l,track:on?trackOn:trackOff,knob:on?knobOn:knobOff,onClick:()=>this.setState({remindLead:{...S.remindLead,[l.key]:!on}})};});
+    const rtypes=[{key:'bill',label:'Bill due'},{key:'deal',label:'Deal expiring'},{key:'appt',label:'Appointment'},{key:'reg',label:'Registration'},{key:'pay',label:'Paycheck planning'}];
+    v.remindTypeChips=rtypes.map(t=>{const on=S.remindTypes[t.key];return {...t,onClick:()=>this.setState({remindTypes:{...S.remindTypes,[t.key]:!on}}),style:`padding:9px 15px;border-radius:18px;border:1.5px solid ${on?'#FFD60A':'#2C2C2E'};background:${on?'#FFD60A':'#1C1C1E'};color:${on?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`};});
+    v.reminderTypeRows=rtypes.map(t=>{const on=S.remindTypes[t.key];return {...t,track:on?trackOn:trackOff,knob:on?knobOn:knobOff,onClick:()=>this.setState({remindTypes:{...S.remindTypes,[t.key]:!on}})};});
+    // ob6 home
+    const homes=[{key:'today',icon:'⭐',title:'Today dashboard',sub:'Everything at a glance'},{key:'notes',icon:'🗒️',title:'Notes list view',sub:'Like Apple Notes'},{key:'calendar',icon:'📅',title:'Calendar view',sub:'See due dates'},{key:'paycheck',icon:'💵',title:'Paycheck view',sub:'Plan by payday'}];
+    v.homeViewOptions=homes.map(h=>{const sel=S.homeView===h.key;return {...h,selected:sel,iconBg:sel?'#FFD60A':'#2C2C2E',onClick:()=>this.setState({homeView:h.key}),style:`width:100%;display:flex;align-items:center;gap:14px;background:#1C1C1E;border:1.5px solid ${sel?'#FFD60A':'transparent'};border-radius:15px;padding:14px;cursor:pointer;`};});
+
+    // ===== APP =====
+    const titles={today:'Today',money:'Money',calendar:'Calendar',deals:'Deals',family:'Family',lists:'Lists'};
+    v.tabTitle=titles[S.tab]||'Today';
+    v.isToday=S.tab==='today'; v.isMoney=S.tab==='money'; v.isCalendar=S.tab==='calendar'; v.isDeals=S.tab==='deals'; v.isFamily=S.tab==='family'; v.isLists=S.tab==='lists';
+    const tabDefs=[{key:'today',label:'Today',icon:'⭐'},{key:'money',label:'Money',icon:'💵'},{key:'calendar',label:'Calendar',icon:'📅'},{key:'deals',label:'Deals',icon:'🏷️'},{key:'family',label:'Family',icon:'👨‍👩‍👧'},{key:'lists',label:'Lists',icon:'🗒️'}];
+    const dealsSoon=()=>this.setState({info:{icon:'🏷️',title:'Deals & Coupons — coming soon',body:'Deal tracking and coupon scanning will be available in a future update. For now, track your bills, calendar, money, and family schedule — all fully functional.'}});
+    v.tabs=tabDefs.map(t=>({...t,color:S.tab===t.key?'#FFD60A':'#8E8E93',onClick:t.key==='deals'?dealsSoon:()=>this.go(t.key)}));
+    v.openSettings=()=>this.openSettings(); v.closeSettings=()=>this.closeSettings();
+    v.onQuickAdd=()=>this.openModal(null);
+    v.goMoney=()=>this.go('money'); v.goDeals=()=>this.go('deals');
+    v.showInfo=!!S.info; v.infoIcon=(S.info&&S.info.icon)||'ℹ️'; v.infoTitle=(S.info&&S.info.title)||''; v.infoBody=(S.info&&S.info.body)||''; v.closeInfo=()=>this.setState({info:null});
+    v.onEmailScan=()=>this.setState({info:{icon:'📧',title:'Email deal scan — coming soon',body:'When connected, Family Command will scan your inbox for coupons and store promos, then show them here as cards to approve before anything is saved. Nothing auto-saves. For now, add deals manually with the + button.'}});
+    v.onWebSearch=()=>this.setState({info:{icon:'🔎',title:'Tucson web search — coming soon',body:'This will search local kids sports, swim lessons, camps and Groupon-style deals around Tucson, AZ and save them as review cards. For now, add activities and deals manually with the + button.'}});
+    v.onConnectedInfo=()=>this.setState({info:{icon:'🔌',title:'Connected accounts — coming soon',body:'Email and web integrations aren\'t available in this standalone version. Everything else in the app is fully functional and saves to this device.'}});
+    v.onRestart=()=>this.setState({phase:'onboarding',obStep:1,settings:false});
+    v.onClearData=()=>{ if(confirm('Clear all data and start fresh? This permanently removes everything saved on this device.')) this.clearAll(); };
+    v.onNewList=()=>this.openListNew();
+
+    const pcP=this.planningPaycheck();
+
+    // Today
+    if(pcP){ const c=this.pcCalc(pcP); const spentPct=pcP.amount?Math.min(100,(c.unpaid/pcP.amount*100)):0; const paidPct=pcP.amount?Math.min(100-spentPct,(c.paid/pcP.amount*100)):0; const nextP=S.paychecks.filter(p=>p.start>pcP.start).sort((a,b)=>a.start.localeCompare(b.start))[0];
+      v.pc={ windowStr:this.md(pcP.start)+' – '+this.md(pcP.end), leftStr:this.money(c.left), spentPct:spentPct+'%', paidPct:paidPct+'%', nextStr:nextP?this.md(nextP.date):'—', countStr:c.uc+' unpaid · '+c.pcnt+' paid', stats:[{label:'Income',value:this.money(pcP.amount),color:'#30D158'},{label:'Planned',value:this.money(c.planned),color:'#fff'},{label:'Paid',value:this.money(c.paid),color:'#30D158'}] };
+      const due=S.items.filter(i=>(i.type==='bill'||i.type==='event')&&i.pc===pcP.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,4); v.dueSoon=due.map(i=>this.chkVm(i));
+    } else { v.pc={windowStr:'',leftStr:'',spentPct:'0%',paidPct:'0%',nextStr:'—',countStr:'',stats:[]}; v.dueSoon=[]; }
+    const exp=[...S.deals].filter(d=>d.status!=='used'&&d.exp).sort((a,b)=>a.exp.localeCompare(b.exp)).slice(0,3);
+    v.dealsExp=exp.map(d=>{const du=this.daysUntil(d.exp);return {title:d.title,store:d.store,icon:this.dealIcon(d.cat),catBg:this.catBg(d.cat==='kids'?'kids':d.cat),expStr:du<0?'Expired':(du===0?'Today':(du<=3?du+'d left':this.md(d.exp))),expColor:du<=3?'#FF453A':'#8E8E93',savingsStr:'Save '+this.money(d.savings),onOpen:()=>this.openOverlay('deal',d.id)};});
+    v.famReminders=S.items.filter(i=>i.type==='task').map(i=>this.taskVm(i));
+
+    // Money
+    const msubs=[{key:'paychecks',label:'Paychecks'},{key:'bills',label:'Bills'},{key:'events',label:'Events'},{key:'savings',label:'Savings'},{key:'history',label:'Paid history'}];
+    v.moneySubs=msubs.map(m=>({...m,onClick:()=>this.setState({moneySub:m.key}),style:`padding:8px 15px;border-radius:18px;white-space:nowrap;border:none;background:${S.moneySub===m.key?'#FFD60A':'#1C1C1E'};color:${S.moneySub===m.key?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`}));
+    v.isMoneyPay=S.moneySub==='paychecks'; v.isMoneyBills=S.moneySub==='bills'; v.isMoneyEvents=S.moneySub==='events'; v.isMoneySavings=S.moneySub==='savings'; v.isMoneyHistory=S.moneySub==='history';
+    const visiblePcs=S.paychecks.filter(p=>p.end>=this.today()||S.items.some(i=>i.pc===p.id&&i.amount)).sort((a,b)=>a.start.localeCompare(b.start)).slice(0,8);
+    v.paychecks=visiblePcs.map(p=>{const c=this.pcCalc(p);const pp=p.amount?(c.paid/p.amount*100):0;const up=p.amount?(c.unpaid/p.amount*100):0;return {id:p.id,dateStr:this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),plannedStr:this.money(c.planned),paidStr:this.money(c.paid),unpaidStr:this.money(c.unpaid),leftStr:this.money(c.left),leftColor:c.left<0?'#FF453A':'#30D158',paidPct:Math.min(100,pp)+'%',unpaidPct:Math.min(100-pp,up)+'%',border:(pcP&&p.id===pcP.id)?'#38371A':'#1C1C1E',onOpen:()=>this.openOverlay('paycheck',p.id)};});
+    v.billsList=S.items.filter(i=>i.type==='bill').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(i=>this.chkVm(i));
+    v.eventsList=S.items.filter(i=>i.type==='event').map(i=>({title:i.title,metaStr:this.md(i.dueDate),amountStr:this.money(i.amount),icon:this.catIcon(i.category),catBg:this.catBg(i.category),onOpen:()=>this.openModal(i.id)}));
+    v.savingsGoals=S.savingsGoals.map(g=>{const p=g.tar?Math.round(g.cur/g.tar*100):0;return {id:g.id,title:g.title,pct:Math.min(100,p)+'%',pctStr:p+'%',currentStr:this.money(g.cur),targetStr:this.money(g.tar),onOpen:()=>this.openSaving(g.id)};});
+    v.onAddSaving=()=>this.openSaving(null);
+    v.paidHistory=S.items.filter(i=>i.paid).map(i=>({title:i.title,metaStr:'Paid '+this.md(i.paidDate||i.dueDate),amountStr:this.money(i.amount)}));
+
+    // Paycheck overlay
+    const ov=S.overlay;
+    v.showPaycheckOv=!!ov&&ov.kind==='paycheck';
+    if(v.showPaycheckOv){const p=S.paychecks.find(x=>x.id===ov.id);const c=this.pcCalc(p);v.ovPc={dateStr:'Paycheck '+this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),plannedStr:this.money(c.planned),paidStr:this.money(c.paid),unpaidStr:this.money(c.unpaid),leftStr:this.money(c.left),leftColor:c.left<0?'#FF453A':'#30D158',items:c.its.map(i=>this.chkVm(i))};} else v.ovPc={items:[]};
+    v.closeOverlay=()=>this.closeOverlay();
+
+    // Calendar
+    const cmodes=[{key:'month',label:'Month'},{key:'week',label:'Week'},{key:'paycheck',label:'Paycheck window'}];
+    v.calModes=cmodes.map(m=>({...m,onClick:()=>this.setState({calMode:m.key}),style:`padding:8px 15px;border-radius:18px;border:none;background:${S.calMode===m.key?'#FFD60A':'#1C1C1E'};color:${S.calMode===m.key?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`}));
+    v.isCalMonth=S.calMode==='month'; v.isCalAgenda=S.calMode!=='month';
+    const cy=S.calYear, cm=S.calMonth0;
+    const monthFirst=new Date(cy,cm,1); const startDow=monthFirst.getDay(); const dim=new Date(cy,cm+1,0).getDate();
+    v.calTitle=monthFirst.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    v.onPrevMonth=()=>{ let y=cy,m=cm-1; if(m<0){m=11;y--;} this.setState({calYear:y,calMonth0:m}); };
+    v.onNextMonth=()=>{ let y=cy,m=cm+1; if(m>11){m=0;y++;} this.setState({calYear:y,calMonth0:m}); };
+    v.weekdayLabels=['S','M','T','W','T','F','S'].map(l=>({l}));
+    const eventsByDay={}; S.items.forEach(i=>{if(i.dueDate){(eventsByDay[i.dueDate]=eventsByDay[i.dueDate]||[]).push(this.catColor(i.category));}}); S.paychecks.forEach(p=>{(eventsByDay[p.date]=eventsByDay[p.date]||[]).push('#30D158');}); S.deals.forEach(d=>{if(d.exp)(eventsByDay[d.exp]=eventsByDay[d.exp]||[]).push('#FF9F0A');});
+    const tdy=this.today(); const cells=[];
+    for(let i=0;i<startDow;i++) cells.push({empty:true});
+    for(let d=1;d<=dim;d++){const isoD=cy+'-'+this.pad(cm+1)+'-'+this.pad(d);const dots=[...new Set(eventsByDay[isoD]||[])].slice(0,4).map(c=>({c}));const sel=S.selectedDate===isoD;const isT=isoD===tdy;cells.push({iso:isoD,day:d+'',dots,onClick:()=>this.setState({selectedDate:isoD}),style:`background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;padding:4px 0 0;`,numStyle:`width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-sizing:border-box;font-weight:${sel?'700':(isT?'700':'400')};background:${sel?'#FFD60A':'transparent'};border:${(isT&&!sel)?'1.5px solid #FFD60A':'1.5px solid transparent'};color:${sel?'#000':(isT?'#FFD60A':'#fff')};`});}
+    v.calCells=cells.map(c=>c.empty?{day:'',dots:[],onClick:()=>{},style:'background:none;border:none;',numStyle:'opacity:0;'}:c);
+    v.calLegend=[{c:'#FF453A',label:'Bill'},{c:'#30D158',label:'Paycheck'},{c:'#FF9F0A',label:'Deal'},{c:'#5AC8FA',label:'Appointment'}];
+    // agenda (week / paycheck)
+    let pStart=null,pEnd=null,aNote='';
+    if(S.calMode==='week'){ const t=new Date(tdy+'T00:00:00'); const ws=new Date(t); ws.setDate(t.getDate()-t.getDay()); const we=new Date(ws); we.setDate(ws.getDate()+6); pStart=this.iso(ws); pEnd=this.iso(we); aNote='This week · '+this.md(pStart)+' – '+this.md(pEnd); }
+    else if(S.calMode==='paycheck'){ if(pcP){ pStart=pcP.start; pEnd=pcP.end; aNote='Paycheck window · '+this.md(pcP.start)+' – '+this.md(pcP.end); } else aNote='No paycheck window set.'; }
+    v.agendaNote=aNote;
+    const inR=iso=>iso&&pStart&&iso>=pStart&&iso<=pEnd;
+    const agg=[...S.items.filter(i=>inR(i.dueDate)),...S.deals.filter(d=>inR(d.exp)).map(d=>({_deal:true,id:d.id,title:d.title+' expires',category:d.cat,dueDate:d.exp})),...S.paychecks.filter(p=>inR(p.date)).map(p=>({_pc:true,id:p.id,title:'Paycheck',amount:p.amount,dueDate:p.date,category:'family'}))].sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+    v.agendaItems=agg.map(i=>({title:i.title,metaStr:this.md(i.dueDate),icon:i._deal?this.dealIcon(i.category):(i._pc?'💵':this.catIcon(i.category)),catBg:i._pc?'#0E2418':this.catBg(i.category),right:i.amount?this.money(i.amount):(i.time||''),onOpen:()=>{if(i._deal)this.openOverlay('deal',i.id);else if(!i._pc)this.openModal(i.id);}}));
+    v.selectedDateStr=this.wd(S.selectedDate);
+    const dayList=[...S.items.filter(i=>i.dueDate===S.selectedDate),...S.paychecks.filter(p=>p.date===S.selectedDate).map(p=>({_pc:true,id:p.id,title:'Paycheck',amount:p.amount,category:'family',type:'paycheck'})),...S.deals.filter(d=>d.exp===S.selectedDate).map(d=>({_deal:true,id:d.id,title:d.title+' expires',category:d.cat,type:'deal'}))];
+    v.dayHasItems=dayList.length>0; v.dayEmpty=dayList.length===0;
+    v.dayItems=dayList.map(i=>{const tl={bill:'Bill',event:'Financial event',appointment:'Appointment',paycheck:'Paycheck',deal:'Deal expiration',task:'Task'}[i.type]||'Item';const ic=i._deal?this.dealIcon(i.category):(i._pc?'💵':this.catIcon(i.category));return {title:i.title,typeLabel:tl,icon:ic,catBg:i._pc?'#0E2418':this.catBg(i.category),right:i.amount?this.money(i.amount):(i.time||''),onOpen:()=>{if(i._deal)this.openOverlay('deal',i.id);else if(!i._pc)this.openModal(i.id);}};});
+
+    // Deals
+    const activeDeals=S.deals;
+    const monthly=activeDeals.filter(d=>d.status==='saved'||d.status==='planned'||d.status==='used').reduce((s,d)=>s+(d.savings||0),0);
+    v.dealSavingsStr=this.money(monthly); v.dealSavedCount=activeDeals.filter(d=>d.status==='saved').length; v.dealExpiringCount=activeDeals.filter(d=>d.status!=='used'&&this.daysUntil(d.exp)<=10&&this.daysUntil(d.exp)>=0).length;
+    const dcats=[{key:'all',label:'All'},{key:'expiring',label:'Expiring'},{key:'groceries',label:'Grocery'},{key:'kids',label:'Kids'},{key:'household',label:'Household'},{key:'family',label:'Family fun'},{key:'medical',label:'Medical'},{key:'used',label:'Used'}];
+    v.dealCats=dcats.map(c=>({...c,onClick:()=>this.setState({dealCat:c.key}),style:`padding:8px 15px;border-radius:18px;white-space:nowrap;border:none;background:${S.dealCat===c.key?'#FFD60A':'#1C1C1E'};color:${S.dealCat===c.key?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`}));
+    let shownDeals=activeDeals; if(S.dealCat==='expiring') shownDeals=activeDeals.filter(d=>d.status!=='used'&&this.daysUntil(d.exp)<=10); else if(S.dealCat==='used') shownDeals=activeDeals.filter(d=>d.status==='used'); else if(S.dealCat!=='all') shownDeals=activeDeals.filter(d=>d.cat===S.dealCat);
+    const statusStyle=st=>{const m={saved:['#FFD60A','#000'],planned:['#0A84FF','#fff'],used:['#3A3A3C','#8E8E93'],expired:['#FF453A','#fff']};const x=m[st]||m.saved;return `font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;background:${x[0]};color:${x[1]};border-radius:7px;padding:4px 9px;flex:0 0 auto;`;};
+    v.dealCards=shownDeals.map(d=>{const du=this.daysUntil(d.exp);return {id:d.id,title:d.title,store:d.store,catLabel:({groceries:'Groceries',kids:'Kids clothing',family:'Family activity',household:'Household',medical:'Medical/dental'})[d.cat]||d.cat,accent:this.catColor(d.cat==='kids'?'kids':d.cat),statusLabel:d.status,statusStyle:statusStyle(d.status),hasCode:!!d.code,code:d.code,savingsStr:'Save '+this.money(d.savings),expStr:d.status==='used'?'Used':(!d.exp?'No date':(du<0?'Expired':(du===0?'Expires today':(du<=3?du+' days left':'Exp '+this.md(d.exp))))),expColor:(d.status!=='used'&&du<=3)?'#FF453A':'#8E8E93',onOpen:()=>this.openOverlay('deal',d.id)};});
+    v.showDealOv=!!ov&&ov.kind==='deal';
+    if(v.showDealOv){const d=S.deals.find(x=>x.id===ov.id);const du=this.daysUntil(d.exp);v.ovDeal={icon:this.dealIcon(d.cat),catBg:this.catBg(d.cat==='kids'?'kids':d.cat),title:d.title,store:d.store,catLabel:({groceries:'Groceries',kids:'Kids clothing',family:'Family activity',household:'Household',medical:'Medical/dental'})[d.cat]||d.cat,savingsStr:this.money(d.savings),statusLabel:d.status,statusStyle:statusStyle(d.status),rows:[{label:'Promo code',value:d.code||'—',color:d.code?'#FFD60A':'#8E8E93'},{label:'Expires',value:(d.exp?this.md(d.exp):'—')+(du>=0&&d.exp?' · '+du+'d':''),color:du<=3?'#FF453A':'#fff'},{label:'Link',value:d.link||'—',color:'#0A84FF'},{label:'Linked area',value:d.cat,color:'#fff'},{label:'Notes',value:d.notes||'—',color:'#fff'}],onUse:()=>{this.setState(s=>({deals:s.deals.map(x=>x.id===d.id?{...x,status:'used'}:x)}));},onEdit:()=>this.openDealEdit(d.id),onCalendar:()=>{if(d.exp)this.setState({selectedDate:d.exp,calYear:+d.exp.slice(0,4),calMonth0:+d.exp.slice(5,7)-1,tab:'calendar',overlay:null});}};} else v.ovDeal={rows:[]};
+
+    // Family
+    v.kids=S.kids.map(k=>({...k,onOpen:()=>this.openKid(k.id)}));
+    v.onAddKid=()=>this.openKid(null);
+    const actSoon=()=>this.setState({info:{icon:'⚽',title:'Activities — coming soon',body:'Kids activity tracking and the research board will be available in a future update. Add appointments and school items in the meantime.'}});
+    const fsubs=[{key:'activities',label:'Activities'},{key:'appts',label:'Appointments'},{key:'school',label:'School'},{key:'research',label:'Research board'}];
+    v.familySubs=fsubs.map(s=>({...s,onClick:(s.key==='activities'||s.key==='research')?actSoon:()=>this.setState({familySub:s.key}),style:`padding:8px 15px;border-radius:18px;white-space:nowrap;border:none;background:${S.familySub===s.key?'#FFD60A':'#1C1C1E'};color:${S.familySub===s.key?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`}));
+    v.isFamActivities=S.familySub==='activities'; v.isFamAppts=S.familySub==='appts'; v.isFamSchool=S.familySub==='school'; v.isFamResearch=S.familySub==='research';
+    const actStatusStyle=st=>{const m={researching:['#3A3A3C','#EBEBF5'],interested:['#FFD60A','#000'],contacted:['#0A84FF','#fff'],registered:['#30D158','#000'],waitlisted:['#FF9F0A','#000'],paid:['#30D158','#000']};const x=m[st]||m.researching;return `font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;background:${x[0]};color:${x[1]};border-radius:7px;padding:4px 9px;flex:0 0 auto;`;};
+    v.activityCards=S.activities.map(a=>{const du=this.daysUntil(a.deadline);return {id:a.id,title:a.title,org:a.org,icon:this.actIcon(a.atype),catBg:'#BF5AF222',statusLabel:a.status,statusStyle:actStatusStyle(a.status),ageStr:a.age,costStr:this.money(a.cost),distStr:a.dist||'—',deadlineStr:a.deadline?(du<0?'Closed':'Signup '+this.md(a.deadline)):'Rolling',deadlineColor:(a.deadline&&du<=7&&du>=0)?'#FF453A':'#AEAEB2',onOpen:()=>this.openOverlay('activity',a.id)};});
+    v.appointmentsList=S.items.filter(i=>i.type==='appointment').map(i=>({title:i.title,metaStr:(i.note||'')+' · '+this.md(i.dueDate),icon:this.catIcon(i.category),catBg:this.catBg(i.category),right:i.time||'',onOpen:()=>this.openModal(i.id)}));
+    const rcols=[['researching','Researching'],['interested','Interested'],['contacted','Contacted']];
+    v.researchCols=rcols.map(([k,label])=>{const its=S.activities.filter(a=>a.status===k);return {label,count:its.length,items:its.map(a=>({title:a.title,org:a.org,icon:this.actIcon(a.atype),onOpen:()=>this.openOverlay('activity',a.id)}))};}).filter(c=>c.count>0);
+    v.schoolList=S.schoolItems.map(x=>({title:x.title,metaStr:x.meta,onOpen:()=>this.openSchool(x.id)}));
+    v.onAddSchool=()=>this.openSchool(null);
+    v.showActivityOv=!!ov&&ov.kind==='activity';
+    if(v.showActivityOv){const a=S.activities.find(x=>x.id===ov.id);const linkedDeal=a.deal?S.deals.find(d=>d.id===a.deal):null;v.ovAct={icon:this.actIcon(a.atype),catBg:'#BF5AF222',title:a.title,org:a.org,statusLabel:a.status,statusStyle:actStatusStyle(a.status),hasDeal:!!linkedDeal,dealStr:linkedDeal?(linkedDeal.title+' · save '+this.money(linkedDeal.savings)):'',rows:[{label:'Sport',value:a.atype,color:'#fff'},{label:'Ages',value:a.age||'—',color:'#fff'},{label:'Season',value:a.season||'—',color:'#fff'},{label:'Cost',value:this.money(a.cost),color:'#30D158'},{label:'Location',value:(a.loc||'—')+(a.dist?' · '+a.dist:''),color:'#fff'},{label:'Signup deadline',value:a.deadline?this.md(a.deadline):'Rolling',color:'#FFD60A'},{label:'Practice',value:a.practice||'—',color:'#fff'},{label:'Equipment',value:a.equip||'—',color:'#fff'},{label:'Contact',value:a.contact||'—',color:'#0A84FF'},{label:'Notes',value:a.notes||'—',color:'#fff'}],actions:[{icon:'✏️',label:'Edit activity details',onClick:()=>this.openActivityEdit(a.id)},{icon:'📅',label:'Add signup deadline to calendar',onClick:()=>{if(a.deadline)this.setState({selectedDate:a.deadline,calYear:+a.deadline.slice(0,4),calMonth0:+a.deadline.slice(5,7)-1,tab:'calendar',overlay:null});}},{icon:'💵',label:'Add registration fee as financial event',onClick:()=>{const dd=a.deadline||'';const w=S.paychecks.find(p=>dd>=p.start&&dd<=p.end);this.setState(s=>({items:[...s.items,{id:'reg'+Date.now(),type:'event',title:a.title+' registration',amount:a.cost||null,dueDate:dd,paid:false,category:'activity',pc:w?w.id:null}],overlay:null,tab:'money',moneySub:'events'}));}},{icon:'📞',label:'Mark as contacted',onClick:()=>{this.setState(s=>({activities:s.activities.map(x=>x.id===a.id?{...x,status:'contacted'}:x)}));}},{icon:'✅',label:'Mark as registered',onClick:()=>{this.setState(s=>({activities:s.activities.map(x=>x.id===a.id?{...x,status:'registered'}:x)}));}}]};} else v.ovAct={rows:[],actions:[]};
+
+    // Lists
+    const q=(S.listQuery||'').trim().toLowerCase();
+    v.listQuery=S.listQuery; v.onListSearch=e=>this.setState({listQuery:e.target.value});
+    v.listFolders=S.lists.filter(l=>!q||l.name.toLowerCase().includes(q)||l.itemIds.some(id=>{const it=S.items.find(i=>i.id===id);return it&&it.title.toLowerCase().includes(q);})).map(l=>({id:l.id,name:l.name,icon:l.icon,color:l.color,count:l.itemIds.length+'',onOpen:()=>this.openOverlay('note',l.id)}));
+    v.showNoteOv=!!ov&&ov.kind==='note';
+    if(v.showNoteOv){const l=S.lists.find(x=>x.id===ov.id);const its=(l.itemIds||[]).map(id=>S.items.find(i=>i.id===id)).filter(Boolean);v.ovNote={title:l.name,dateStr:this.wd(this.today())+' · '+its.length+' items',items:its.map(i=>{const paid=!!i.paid;return {id:i.id,title:i.title+(i.amount?'  '+this.money(i.amount):''),paid,checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),convertTo:({bill:'bill',event:'event',appointment:'appointment',task:'reminder'})[i.type]||'item',onToggle:()=>this.togglePaid(i.id),onConvert:()=>this.openModal(i.id)};})};} else v.ovNote={items:[]};
+
+    // Modal
+    v.showModal=!!S.modal; const d=S.draft||{};
+    const tLabels={bill:'bill',event:'event',task:'task',appointment:'appointment',deal:'deal',activity:'activity',savings:'savings goal',kid:'child',school:'school item',list:'list',paycheck:'paycheck'};
+    v.modalTitle=(d.id?'Edit ':'New ')+(tLabels[d.type]||'item');
+    const mtypes=[{key:'bill',label:'Bill'},{key:'paycheck',label:'Paycheck'},{key:'appointment',label:'Appointment'},{key:'deal',label:'Deal'},{key:'activity',label:'Activity'},{key:'task',label:'Task'},{key:'event',label:'Event'},{key:'savings',label:'Savings'}];
+    v.modalTypes=mtypes.map(t=>({...t,onClick:()=>this.setState({draft:{...S.draft,type:t.key}}),style:`padding:8px 15px;border-radius:18px;white-space:nowrap;border:none;background:${d.type===t.key?'#FFD60A':'#2C2C2E'};color:${d.type===t.key?'#000':'#fff'};font-size:14px;font-weight:600;cursor:pointer;`}));
+    const PH={ bill:['Title','Amount','Due date (YYYY-MM-DD)','Notes'], event:['Title','Amount','Date (YYYY-MM-DD)','Notes'], task:['Task name','','','Notes'], appointment:['Title','','Date (YYYY-MM-DD)','Notes / location'], deal:['Deal title','Savings $','Expires (YYYY-MM-DD)','Store'], activity:['Activity title','Cost $','Signup deadline (YYYY-MM-DD)','Organization'], savings:['Goal name','Target $','Saved so far $','Notes'], kid:["Child's name",'Age (e.g. 5 yrs)','','Notes'], school:['School item','','','Detail (e.g. Due Aug 1)'], list:['List name','','','Notes'], paycheck:['Label (optional)','Amount','Pay date (YYYY-MM-DD)','Notes'] };
+    const ph=PH[d.type]||PH.bill;
+    v.ph1=ph[0]; v.ph2=ph[1]; v.ph3=ph[2]; v.ph4=ph[3];
+    v.draftTitle=d.title||''; v.draftAmount=d.amount!=null?String(d.amount):''; v.draftDate=d.dueDate||''; v.draftNote=d.note||'';
+    v.onDraftTitle=e=>this.setState({draft:{...S.draft,title:e.target.value}});
+    v.onDraftAmount=e=>this.setState({draft:{...S.draft,amount:e.target.value}});
+    v.onDraftDate=e=>this.setState({draft:{...S.draft,dueDate:e.target.value}});
+    v.onDraftNote=e=>this.setState({draft:{...S.draft,note:e.target.value}});
+    v.draftRepeat=d.repeat||'None';
+    v.draftReminder=d.reminder||'None';
+    v.draftPaycheckLabel=(()=>{ if(!d.pc) return 'None'; const p=S.paychecks.find(x=>x.id===d.pc); return p?this.md(p.date):'None'; })();
+    v.onCycleRepeat=()=>{const o=['None','Weekly','Biweekly','Monthly','Yearly'];const c=d.repeat||'None';this.setState({draft:{...S.draft,repeat:o[(o.indexOf(c)+1)%o.length]}});};
+    v.onCycleReminder=()=>{const o=['None','1 day before','3 days before','1 week before'];const c=d.reminder||'None';this.setState({draft:{...S.draft,reminder:o[(o.indexOf(c)+1)%o.length]}});};
+    v.onCyclePaycheck=()=>{const ids=[null,...S.paychecks.map(p=>p.id)];const c=d.pc||null;const idx=ids.indexOf(c);this.setState({draft:{...S.draft,pc:ids[(idx+1)%ids.length]}});};
+    v.canDelete=!!d.id;
+    v.onDeleteDraft=()=>this.onDeleteDraft();
+    v.saveModal=()=>this.saveModal(); v.closeModal=()=>this.closeModal();
+
+    v.showSettings=S.settings;
+    return v;
+  }
+}
+
+/* ===========================================================================
+   Boot: instantiate the component, wire it to the template + mount point.
+   =========================================================================== */
+function boot(){
+  var app = new Component();
+  app._tmpl = document.getElementById('t');
+  app._root = document.getElementById('app');
+  app._render();
+  window.__familyCommand = app;   // handy for debugging in the console
+}
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})();
+
+</script>
+</body>
+</html>
