@@ -1,6 +1,6 @@
-# Family Command
+# Aurora Calendar
 
-Family Command is a private family calendar and task manager for organizing household life in one simple browser-based dashboard.
+Aurora Calendar is a private family calendar and task manager for organizing household life in one simple browser-based dashboard.
 
 ## Features
 
@@ -17,7 +17,7 @@ This app is intended to be private/password-protected when deployed. It does not
 
 ## How To Use
 
-Open the site in a browser. Add bills, events, deals, family tasks, and list items from the app UI. Data persists locally in the browser using `localStorage`, so each browser/device keeps its own copy of the family data.
+Open the site in a browser. Desktop visitors see a normal browser layout with the live app panel; phone visitors get the full app experience. Add bills, events, deals, family tasks, and list items from the app UI. Data persists locally in the browser using `localStorage`, so each browser/device keeps its own copy of the family data.
 
 ## Deployment
 
