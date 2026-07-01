@@ -858,18 +858,56 @@ class Component extends DCLogic {
   planningPaycheck(){ const t=this.today(); const fut=this.state.paychecks.filter(p=>p.end>=t).sort((a,b)=>a.start.localeCompare(b.start)); const withItems=fut.find(p=>this.state.items.some(i=>i.pc===p.id&&i.amount)); return withItems||fut[0]||this.state.paychecks[this.state.paychecks.length-1]||null; }
 
   parseNote(text){
-    const lines=(text||'').split('\n').map(l=>l.trim()).filter(Boolean);
-    const amtRe=/\$?\b(\d{2,4})\b/; const dateRe=/\b(\d{1,2})\/(\d{1,2})\b/;
-    return lines.map((line,_i)=>{
-      const low=line.toLowerCase(); const dm=line.match(dateRe); const date=dm?dm[0]:null;
+    const amtRe=/\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)/;
+    const dateRe=/\b(\d{1,2})\/(\d{1,2})\b/;
+    const monthNames=/^(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)s?$/i;
+    const normalized=String(text||'')
+      .replace(/\r/g,'\n')
+      .replace(/[ \t]+/g,' ')
+      .replace(/(\b\d{1,2}\/\d{1,2})\s+(?=\$)/g,'$1~')
+      .replace(/\s+(?=\d{1,2}\/\d{1,2}~\$)/g,'\n')
+      .replace(/\s+(?=\$)/g,'\n')
+      .replace(/~/g,' ')
+      .replace(/\s+(?=\d{1,2}\/\d{1,2}\s+PAYDAY\b)/gi,'\n');
+    const records=normalized.split('\n').map(l=>l.trim()).filter(Boolean);
+    const out=[]; let lastDate=null;
+    const cleanTitle=(line)=>{
+      return line
+        .replace(amtRe,'')
+        .replace(/\s*-\s*scheduled\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\bscheduled\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\s*-\s*scheduled\b/ig,'')
+        .replace(/\bscheduled\b/ig,'')
+        .replace(/\bpaid\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\bpaid\b/ig,'')
+        .replace(dateRe,'')
+        .replace(/\u2705/g,'')
+        .replace(/\s*[-:]\s*$/,'')
+        .replace(/\s{2,}/g,' ')
+        .trim();
+    };
+    records.forEach((line)=>{
+      const low=line.toLowerCase();
+      const dm=line.match(/^(\d{1,2}\/\d{1,2})\b/);
+      if(dm) lastDate=dm[0];
+      const date=dm?dm[0]:lastDate;
+      if(monthNames.test(line)||low.startsWith('paydays')||(/\bpayday\b/i.test(line)&&!amtRe.test(line))) return;
+
+      const hasPaid=/\u2705|\bpaid\b/i.test(line);
+      const am=line.match(amtRe);
       let type='unknown',title=line,amount=null;
-      if(low.includes('paycheck')){type='paycheck';title='Paycheck';}
-      else if(low.includes('paid')){type='paid';title=line.replace(/paid/i,'').trim();}
-      else if(low.includes('due')){type='bill';const am=line.match(amtRe);amount=am?+am[1]:null;title=line.replace(amtRe,'').replace(/due.*$/i,'').trim();}
-      else if(low.startsWith('check')||low.startsWith('call')||low.startsWith('look')||low.includes('signup')){type='task';title=line;}
-      else if(low.includes('dentist')||low.includes('doctor')||low.includes('appointment')||(dm&&amtRe.test(line))){type='event';const am=line.match(amtRe);amount=am?+am[1]:null;title=line.replace(amtRe,'').replace(dateRe,'').trim();}
-      return {type,title:title||line,amount,date,raw:line,_i};
+      if(am){
+        amount=+am[1].replace(/,/g,'');
+        title=cleanTitle(line);
+        type=(low.includes('dentist')||low.includes('doctor')||low.includes('appointment'))?'event':'bill';
+      }
+      else if(low.includes('paycheck')){type='paycheck';title='Paycheck';}
+      else if(low.startsWith('check')||low.startsWith('call')||low.startsWith('look')||low.includes('signup')){type='task';title=cleanTitle(line)||line.replace(/\u2705/g,'').trim();}
+
+      if(type==='unknown'||!title) return;
+      out.push({type,title,amount,date,paid:hasPaid,raw:line,_i:out.length});
     });
+    return out;
   }
 
   // ---- actions ----
@@ -903,8 +941,8 @@ class Component extends DCLogic {
     const has=(arr,t)=>arr.some(x=>(x.title||'').toLowerCase()===t.toLowerCase());
     const newItems=[]; let seq=0;
     parsed.forEach(p=>{ const uid=()=>'imp'+Date.now()+(seq++);
-      if(p.type==='bill'||p.type==='event'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:p.type==='event'?'event':'bill',title:p.title,amount:p.amount||null,dueDate:this.normDate(p.date),paid:false,category:p.type==='event'?'family':'utilities',pc:null}); }
-      else if(p.type==='paid'){ if(p.title&&!has(s.items,p.title)) newItems.push({id:uid(),type:'bill',title:p.title,amount:p.amount||null,dueDate:null,paid:true,paidDate:this.today(),category:'utilities',pc:null}); }
+      if(p.type==='bill'||p.type==='event'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:p.type==='event'?'event':'bill',title:p.title,amount:p.amount??null,dueDate:this.normDate(p.date),paid:!!p.paid,paidDate:p.paid?this.today():null,category:p.type==='event'?'family':'utilities',pc:null}); }
+      else if(p.type==='paid'){ if(p.title&&!has(s.items,p.title)) newItems.push({id:uid(),type:'bill',title:p.title,amount:p.amount??null,dueDate:null,paid:true,paidDate:this.today(),category:'utilities',pc:null}); }
       else if(p.type==='task'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:'task',title:p.title,paid:false,category:'family'}); }
     });
     if(newItems.length) this.setState(st=>({items:[...st.items,...newItems]}));
@@ -956,7 +994,7 @@ class Component extends DCLogic {
     v.varyTrackStyle=S.payday.vary?trackOn:trackOff; v.varyKnobStyle=S.payday.vary?knobOn:knobOff; v.onToggleVary=()=>this.setState({payday:{...S.payday,vary:!S.payday.vary}});
     const order=[['paycheck','Paychecks','#8CA679'],['bill','Bills','#C97C93'],['event','Financial events','#5C9AA6'],['paid','Already paid','#9C7F76'],['task','Tasks','#D98CA0'],['unknown','Needs review','#9C7F76']];
     const parsed=S.parsed||[];
-    v.parsedBuckets=order.map(([k,label,color])=>{const its=parsed.filter(p=>p.type===k);return {key:k,label,color,count:its.length,countStr:its.length+'',items:its.map(p=>{const meta=[p.amount?this.money(p.amount):'',p.date?'· '+p.date:''].filter(Boolean).join(' ');const sel=S.parsedSel[p._i]!==false;return {title:p.title,meta,hasMeta:!!meta,sel,onToggle:()=>this.setState({parsedSel:{...S.parsedSel,[p._i]:!sel}})};})};}).filter(b=>b.count>0);
+    v.parsedBuckets=order.map(([k,label,color])=>{const its=parsed.filter(p=>p.type===k);return {key:k,label,color,count:its.length,countStr:its.length+'',items:its.map(p=>{const meta=[p.amount?this.money(p.amount):'',p.date?'· '+p.date:'',p.paid?'· Paid':''].filter(Boolean).join(' ');const sel=S.parsedSel[p._i]!==false;return {title:p.title,meta,hasMeta:!!meta,sel,onToggle:()=>this.setState({parsedSel:{...S.parsedSel,[p._i]:!sel}})};})};}).filter(b=>b.count>0);
     const leads=[{key:'d1',label:'1 day before'},{key:'d3',label:'3 days before'},{key:'d7',label:'1 week before'},{key:'custom',label:'Custom reminders'}];
     v.remindLeadOptions=leads.map(l=>{const on=S.remindLead[l.key];return {...l,track:on?trackOn:trackOff,knob:on?knobOn:knobOff,onClick:()=>this.setState({remindLead:{...S.remindLead,[l.key]:!on}})};});
     const rtypes=[{key:'bill',label:'Bill due'},{key:'appt',label:'Appointment'},{key:'pay',label:'Paycheck planning'}];
