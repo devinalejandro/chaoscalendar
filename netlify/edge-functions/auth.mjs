@@ -122,8 +122,13 @@ export default async (req, context) => {
   }
 
   if (url.pathname === "/logout") {
-    return Response.redirect(new URL("/", url), 302, {
-      "Set-Cookie": `${COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`,
+    return new Response(null, {
+      status: 302,
+      headers: {
+        "Location": "/",
+        "Set-Cookie": `${COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`,
+        "Cache-Control": "no-store",
+      },
     });
   }
 
@@ -131,8 +136,13 @@ export default async (req, context) => {
     const form = await req.formData().catch(() => null);
     if (form?.get("password") === password) {
       const session = await createSession(secret);
-      return Response.redirect(new URL("/", url), 302, {
-        "Set-Cookie": `${COOKIE_NAME}=${session}; Max-Age=${SESSION_TTL_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+      return new Response(null, {
+        status: 302,
+        headers: {
+          "Location": "/",
+          "Set-Cookie": `${COOKIE_NAME}=${session}; Max-Age=${SESSION_TTL_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+          "Cache-Control": "no-store",
+        },
       });
     }
     return html(loginPage("That password did not work. Try again."), 401);
