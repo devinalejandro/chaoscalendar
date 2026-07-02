@@ -1,11 +1,12 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
-import type { BillInstance, Snapshot } from '../types'
+import type { Bill, BillCategory, BillInstance, Snapshot } from '../types'
 import { createMemoryStorage, getBrowserStorage, type KeyValueStorage } from '../data/storage'
-import { loadHouseholdSnapshot, markInstancePaid, saveSnapshot } from '../data/repository'
+import { loadHouseholdSnapshot, markInstancePaid, regenerateInstances, saveSnapshot, upsertBill, upsertRecurrenceRule } from '../data/repository'
 import { assignInstancesToPaychecks } from '../lib/windows'
 import { seedHousehold } from '../data/seed'
 import { newId } from '../lib/id'
-import { iso } from '../lib/dates'
+import { addMonths, iso } from '../lib/dates'
+import { buildRecurrenceRule, type RecurrenceInput } from '../lib/recurrence'
 
 const DEVICE_ID_KEY = 'aurora.deviceId'
 
@@ -21,6 +22,25 @@ function isEmptyHousehold(snapshot: Snapshot): boolean {
   return !snapshot.data.household && snapshot.data.paychecks.length === 0 && snapshot.data.bills.length === 0
 }
 
+/** Instances are generated from today back to the earliest known paycheck
+    (so a newly added bill shows up in windows already on screen) through
+    6 months out — the PRD's recommended default horizon. */
+function defaultHorizon(snapshot: Snapshot): { from: string; to: string } {
+  const today = iso(new Date())
+  const from = snapshot.data.paychecks[0]?.periodStart ?? today
+  return { from, to: addMonths(today, 6) }
+}
+
+export type SaveBillInput = {
+  /** omit to create a new bill */
+  id?: string
+  name: string
+  category: BillCategory
+  /** cents */
+  amount: number
+  recurrence: RecurrenceInput | { kind: 'once'; dueDate: string }
+}
+
 export interface HouseholdState {
   snapshot: Snapshot
   /** true when the previous local snapshot failed validation and was
@@ -28,6 +48,11 @@ export interface HouseholdState {
   quarantined: boolean
   markPaid: (instanceId: string, paidDate?: string) => void
   addQuickBill: (input: { title: string; amount: number; dueDate: string }) => void
+  /** Creates or updates a Bill template (and its RecurrenceRule, if any),
+      then regenerates instances over the default horizon. Safe to call
+      repeatedly — materialization is idempotent. */
+  saveBill: (input: SaveBillInput) => void
+  setBillActive: (billId: string, active: boolean) => void
 }
 
 /** Builds an isolated store bound to the given storage — production uses the
@@ -76,6 +101,50 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           snapshot.data.paychecks,
         )
         persist({ ...snapshot, data: { ...snapshot.data, billInstances } })
+      },
+      saveBill: (input) => {
+        const snapshot = get().snapshot
+        const householdId = snapshot.data.household?.id ?? 'hh_local'
+        const billId = input.id ?? newId('bill')
+        const previous = snapshot.data.bills.find((b) => b.id === billId)
+
+        let next = snapshot
+        let recurrenceRuleId: string | undefined
+        let dueDate: string | undefined
+
+        if (input.recurrence.kind === 'once') {
+          dueDate = input.recurrence.dueDate
+        } else {
+          const ruleId = previous?.recurrenceRuleId ?? newId('rr')
+          const rule = buildRecurrenceRule(ruleId, householdId, input.recurrence)
+          next = upsertRecurrenceRule(next, rule)
+          recurrenceRuleId = ruleId
+        }
+
+        const bill: Bill = {
+          id: billId,
+          householdId,
+          name: input.name,
+          category: input.category,
+          expectedAmount: input.amount,
+          dueDate,
+          recurrenceRuleId,
+          isFixed: input.recurrence.kind !== 'once',
+          active: previous?.active ?? true,
+        }
+        next = upsertBill(next, bill)
+        const { from, to } = defaultHorizon(next)
+        next = regenerateInstances(next, from, to)
+        persist(next)
+      },
+      setBillActive: (billId, active) => {
+        const snapshot = get().snapshot
+        const bill = snapshot.data.bills.find((b) => b.id === billId)
+        if (!bill) return
+        let next = upsertBill(snapshot, { ...bill, active })
+        const { from, to } = defaultHorizon(next)
+        next = regenerateInstances(next, from, to)
+        persist(next)
       },
     }
   })

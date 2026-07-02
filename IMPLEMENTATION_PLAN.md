@@ -247,6 +247,31 @@ complaint. 64/64 tests pass (7 new store tests), `tsc -b` + `vite build` +
 lint all clean. Calendar and Bills tabs remain M3/M5 placeholders.
 
 | M3 | Bills: template library + instance materializer + history | Templates generate 6 months of instances idempotently |
+
+**M3 status (2026-07-02): Bills tab landed — fixed bill library, one-time
+bills, and paid history.** `saveBill`/`setBillActive` on the store build a
+`RecurrenceRule` from the form's chosen cadence (monthly/weekly/biweekly/
+every-N-days) or a one-off `dueDate`, upsert the Bill template, and call
+`regenerateInstances` over a default horizon (today back to the earliest
+known paycheck window, forward 6 months — `lib/dates.addMonths`), so newly
+added or edited bills immediately populate the windows already on screen.
+`lib/recurrence.ts` gained `buildRecurrenceRule` and `describeRecurrence`
+(human-readable "Monthly on day 18" / "One-time · Jul 15" labels) alongside
+the M1 occurrence engine. Editing a bill's amount/name only affects future
+materialization — already-generated instances (including paid ones) are
+untouched, verified by a test that pays an instance, edits the template, and
+confirms the paid instance keeps its original title/amount. The
+active/inactive toggle stops future generation without deleting instance
+history, matching the PRD's "recurring bills should create instances, not
+overwrite the bill template" rule. Verified live: added a monthly Water bill
+($71.70, day 18) and watched it materialize into the correct paycheck window
+in real time; toggling it inactive visually dimmed the row and persisted.
+74/74 tests pass (10 new: recurrence builder/describer + saveBill/
+setBillActive, including the M3 exit criterion — saving the same bill twice
+produces zero duplicate instances). `tsc -b`, `vite build`, lint all clean.
+Paid history still shows only the most recent 20 entries; CSV/JSON export
+remains M1's unfinished item, not addressed here.
+
 | M4 | Import: parser port + fixtures + full review flow | Real paste → grouped review → accept; nothing saves unreviewed |
 | M5 | Prediction calculator + Calendar tab | Projections match hand-computed fixtures; goal/vacation planners answer PRD examples |
 | M6 | Migration + cutover: legacy export button, importer + review, Supabase Auth replaces password gate, old app archived at `/legacy/` | Live household data migrated with review; success criteria in PRD §Success all pass |

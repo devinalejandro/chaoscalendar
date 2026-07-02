@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { occurrencesInRange } from './recurrence'
-import type { RecurrenceRule } from '../types'
+import { buildRecurrenceRule, describeRecurrence, occurrencesInRange } from './recurrence'
+import type { Bill, RecurrenceRule } from '../types'
 
 const rule = (overrides: Partial<RecurrenceRule>): RecurrenceRule => ({
   id: 'rr_test',
@@ -59,5 +59,61 @@ describe('occurrencesInRange — custom_days', () => {
   it('steps by intervalDays', () => {
     const r = rule({ frequency: 'custom_days', intervalDays: 10, anchorDate: '2026-06-01' })
     expect(occurrencesInRange(r, '2026-06-01', '2026-06-25')).toEqual(['2026-06-01', '2026-06-11', '2026-06-21'])
+  })
+})
+
+describe('buildRecurrenceRule', () => {
+  it('maps each Bills-form recurrence kind to the matching rule shape', () => {
+    expect(buildRecurrenceRule('rr_1', 'hh', { kind: 'monthly', dayOfMonth: 10 })).toEqual({
+      id: 'rr_1',
+      householdId: 'hh',
+      frequency: 'monthly',
+      dayOfMonth: 10,
+    })
+    expect(buildRecurrenceRule('rr_2', 'hh', { kind: 'weekly', anchorDate: '2026-06-01' })).toEqual({
+      id: 'rr_2',
+      householdId: 'hh',
+      frequency: 'weekly',
+      anchorDate: '2026-06-01',
+    })
+    expect(buildRecurrenceRule('rr_3', 'hh', { kind: 'custom_days', intervalDays: 10, anchorDate: '2026-06-01' })).toEqual({
+      id: 'rr_3',
+      householdId: 'hh',
+      frequency: 'custom_days',
+      anchorDate: '2026-06-01',
+      intervalDays: 10,
+    })
+  })
+})
+
+describe('describeRecurrence', () => {
+  const bill = (overrides: Partial<Bill>): Bill => ({
+    id: 'bill_1',
+    householdId: 'hh',
+    name: 'Test',
+    category: 'other',
+    isFixed: true,
+    active: true,
+    ...overrides,
+  })
+
+  it('describes a monthly bill by day of month', () => {
+    const b = bill({ recurrenceRuleId: 'rr_1' })
+    const rules = [rule({ id: 'rr_1', frequency: 'monthly', dayOfMonth: 10 })]
+    expect(describeRecurrence(b, rules)).toBe('Monthly on day 10')
+  })
+
+  it('describes a one-time bill with its due date', () => {
+    const b = bill({ dueDate: '2026-07-15' })
+    expect(describeRecurrence(b, [])).toBe('One-time · Jul 15')
+  })
+
+  it('describes a bill with no rule and no due date as plain One-time', () => {
+    expect(describeRecurrence(bill({}), [])).toBe('One-time')
+  })
+
+  it('falls back gracefully when the referenced rule is missing', () => {
+    const b = bill({ recurrenceRuleId: 'rr_gone' })
+    expect(describeRecurrence(b, [])).toBe('Recurring')
   })
 })

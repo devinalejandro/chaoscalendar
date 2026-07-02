@@ -1,5 +1,5 @@
-import type { RecurrenceRule } from '../types'
-import { addDays, iso, isValidIso } from './dates'
+import type { Bill, RecurrenceRule } from '../types'
+import { addDays, formatDisplay, iso, isValidIso } from './dates'
 
 /** Returns ISO due dates a recurrence rule produces within [fromIso, toIso],
     inclusive on both ends. Pure and side-effect free — callers decide what
@@ -61,4 +61,45 @@ function intervalOccurrences(rule: RecurrenceRule, fromIso: string, toIso: strin
     guard += 1
   }
   return out
+}
+
+/** Input shape for the Bills form (features/bills) — one variant per
+    recurrence kind the UI offers, kept separate from RecurrenceRule so the
+    form doesn't need to know rule ids. */
+export type RecurrenceInput =
+  | { kind: 'monthly'; dayOfMonth: number }
+  | { kind: 'weekly'; anchorDate: string }
+  | { kind: 'biweekly'; anchorDate: string }
+  | { kind: 'custom_days'; intervalDays: number; anchorDate: string }
+
+export function buildRecurrenceRule(id: string, householdId: string, input: RecurrenceInput): RecurrenceRule {
+  switch (input.kind) {
+    case 'monthly':
+      return { id, householdId, frequency: 'monthly', dayOfMonth: input.dayOfMonth }
+    case 'weekly':
+      return { id, householdId, frequency: 'weekly', anchorDate: input.anchorDate }
+    case 'biweekly':
+      return { id, householdId, frequency: 'biweekly', anchorDate: input.anchorDate }
+    case 'custom_days':
+      return { id, householdId, frequency: 'custom_days', anchorDate: input.anchorDate, intervalDays: input.intervalDays }
+  }
+}
+
+/** Human-readable recurrence summary for the Bills library list. */
+export function describeRecurrence(bill: Bill, rules: RecurrenceRule[]): string {
+  if (!bill.recurrenceRuleId) {
+    return bill.dueDate ? `One-time · ${formatDisplay(bill.dueDate)}` : 'One-time'
+  }
+  const rule = rules.find((r) => r.id === bill.recurrenceRuleId)
+  if (!rule) return 'Recurring'
+  switch (rule.frequency) {
+    case 'monthly':
+      return `Monthly on day ${rule.dayOfMonth ?? 1}`
+    case 'weekly':
+      return `Weekly${rule.anchorDate ? ` from ${formatDisplay(rule.anchorDate)}` : ''}`
+    case 'biweekly':
+      return `Biweekly${rule.anchorDate ? ` from ${formatDisplay(rule.anchorDate)}` : ''}`
+    case 'custom_days':
+      return `Every ${rule.intervalDays ?? '?'} days`
+  }
 }

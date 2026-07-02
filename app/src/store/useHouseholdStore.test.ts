@@ -82,3 +82,83 @@ describe('createHouseholdStore — actions', () => {
     expect(created?.paycheckId).toBeUndefined()
   })
 })
+
+describe('createHouseholdStore — saveBill', () => {
+  it('creates a monthly recurring bill and materializes instances over the default ~6-month horizon', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const bills = store.getState().snapshot.data.bills.length
+
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+
+    const { bills: newBills, billInstances, recurrenceRules } = store.getState().snapshot.data
+    expect(newBills).toHaveLength(bills + 1)
+    const water = newBills.find((b) => b.name === 'Water')!
+    expect(water.isFixed).toBe(true)
+    expect(water.active).toBe(true)
+    expect(recurrenceRules.some((r) => r.id === water.recurrenceRuleId)).toBe(true)
+
+    const waterInstances = billInstances.filter((i) => i.billId === water.id)
+    // ~6 months out from today should produce 6 or 7 monthly occurrences
+    expect(waterInstances.length).toBeGreaterThanOrEqual(5)
+    expect(waterInstances.every((i) => i.amount === 7000 && i.title === 'Water')).toBe(true)
+  })
+
+  it('is idempotent: saving the same bill again does not duplicate instances', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
+    const countAfterFirst = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
+
+    // "editing and re-saving" the same bill (same id, same recurrence)
+    store.getState().saveBill({ id: water.id, name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const countAfterSecond = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
+
+    expect(countAfterSecond).toBe(countAfterFirst)
+  })
+
+  it('editing a bill updates the template without mutating instances already generated', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
+    const firstInstance = store.getState().snapshot.data.billInstances.find((i) => i.billId === water.id)!
+    store.getState().markPaid(firstInstance.id, '2026-06-18')
+
+    store.getState().saveBill({ id: water.id, name: 'Water bill', category: 'utilities', amount: 7500, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+
+    const updatedTemplate = store.getState().snapshot.data.bills.find((b) => b.id === water.id)!
+    expect(updatedTemplate.name).toBe('Water bill')
+    expect(updatedTemplate.expectedAmount).toBe(7500)
+    // the already-paid instance is untouched by the template edit
+    const stillPaid = store.getState().snapshot.data.billInstances.find((i) => i.id === firstInstance.id)!
+    expect(stillPaid).toMatchObject({ status: 'paid', paidDate: '2026-06-18', title: 'Water', amount: 7000 })
+  })
+
+  it('creates a one-time bill with a single instance on its due date', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const target = store.getState().snapshot.data.paychecks[0].periodStart
+    store.getState().saveBill({ name: 'Vet visit', category: 'other', amount: 12000, recurrence: { kind: 'once', dueDate: target } })
+
+    const bill = store.getState().snapshot.data.bills.find((b) => b.name === 'Vet visit')!
+    expect(bill.isFixed).toBe(false)
+    expect(bill.recurrenceRuleId).toBeUndefined()
+    const instances = store.getState().snapshot.data.billInstances.filter((i) => i.billId === bill.id)
+    expect(instances).toHaveLength(1)
+    expect(instances[0].dueDate).toBe(target)
+  })
+})
+
+describe('createHouseholdStore — setBillActive', () => {
+  it('stops future materialization but keeps existing instances', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
+    const countBefore = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
+    expect(countBefore).toBeGreaterThan(0)
+
+    store.getState().setBillActive(water.id, false)
+
+    expect(store.getState().snapshot.data.bills.find((b) => b.id === water.id)?.active).toBe(false)
+    const countAfter = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
+    expect(countAfter).toBe(countBefore)
+  })
+})

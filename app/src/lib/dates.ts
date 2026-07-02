@@ -41,6 +41,12 @@ export function addDays(isoDate: string, days: number): string {
   return iso(d)
 }
 
+export function addMonths(isoDate: string, months: number): string {
+  const d = new Date(isoDate + 'T00:00:00')
+  d.setMonth(d.getMonth() + months)
+  return iso(d)
+}
+
 /** Short display form ("Jul 6") for a valid ISO date. Falls back to the raw
     string for invalid input so a bad date is visible, not a JS "Invalid Date". */
 export function formatDisplay(isoDate: string): string {
