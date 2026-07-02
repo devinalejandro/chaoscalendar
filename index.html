@@ -774,6 +774,15 @@ class Component extends DCLogic {
       remindLead:saved.remindLead||seed.remindLead, remindTypes:saved.remindTypes||seed.remindTypes,
       homeView:saved.homeView||'today', onboarded:!!saved.onboarded,
     } : seed;
+    const badPaychecks=(data.paychecks||[]).some(p=>!this.validIso(p.date)||!this.validIso(p.start)||!this.validIso(p.end));
+    const needsAssignment=(data.items||[]).some(i=>i.dueDate&&i.amount&&!i.pc);
+    if(data.onboarded&&(badPaychecks||(!data.paychecks.length&&data.payday&&data.payday.date))){
+      data.payday={...data.payday,date:this.coerceDate(data.payday.date)};
+      data.paychecks=this.generatePaychecks(data.payday);
+      data.items=this.assignPc(data.items,data.paychecks);
+    } else if(data.onboarded&&data.paychecks.length&&needsAssignment){
+      data.items=this.assignPc(data.items,data.paychecks);
+    }
 
     const parsed = this.parseNote(DEFAULT_NOTE);
     const parsedSel = {}; parsed.forEach(p=>parsedSel[p._i]=true);
@@ -798,6 +807,8 @@ class Component extends DCLogic {
   todayStr(){ return new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}); }
   addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return this.iso(d); }
   normDate(s){ if(!s) return null; const m=String(s).match(/(\d{1,2})\/(\d{1,2})/); if(!m) return null; const y=new Date().getFullYear(); return y+'-'+this.pad(m[1])+'-'+this.pad(m[2]); }
+  validIso(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s||''))) return false; const d=new Date(s+'T00:00:00'); return !isNaN(d.getTime())&&this.iso(d)===s; }
+  coerceDate(s){ if(this.validIso(s)) return s; return this.normDate(s)||this.today(); }
 
   // ---- display helpers ----
   money(n){ if(n==null||isNaN(n)) return ''; return '$'+Number(n).toLocaleString('en-US'); }
@@ -822,12 +833,18 @@ class Component extends DCLogic {
 
   // ---- paycheck scheduling ----
   generatePaychecks(payday){
-    const freq=payday.freq||'biweekly'; const amount=+payday.amount||0; const base=payday.date||this.today(); const out=[];
+    const freq=payday.freq||'biweekly'; const amount=+payday.amount||0; const base=this.coerceDate(payday.date); const out=[];
+    const step = freq==='weekly'?7:(freq==='twicemonthly'?15:14);
+    let explicit=[...(payday.dates||[])].map(d=>this.coerceDate(d)).filter(d=>this.validIso(d)).sort().filter((d,i,a)=>i===0||d!==a[i-1]);
+    if(explicit.length){
+      while(explicit.length<12){ explicit.push(this.addDays(explicit[explicit.length-1],step)); }
+      for(let i=0;i<explicit.length;i++){ const start=explicit[i]; const end=explicit[i+1]?this.addDays(explicit[i+1],-1):this.addDays(start,step-1); out.push({id:'pc_'+start,date:start,amount,start,end}); }
+      return out;
+    }
     if(freq==='monthly'){
       let d=new Date(base+'T00:00:00'); d.setMonth(d.getMonth()-1);
       for(let i=0;i<10;i++){ const start=this.iso(d); const e=new Date(d); e.setMonth(e.getMonth()+1); e.setDate(e.getDate()-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setMonth(d.getMonth()+1); }
     } else {
-      const step = freq==='weekly'?7:(freq==='twicemonthly'?15:14);
       let d=new Date(base+'T00:00:00'); d.setDate(d.getDate()-step);
       for(let i=0;i<12;i++){ const start=this.iso(d); const e=new Date(d); e.setDate(e.getDate()+step-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setDate(d.getDate()+step); }
     }
@@ -835,6 +852,19 @@ class Component extends DCLogic {
   }
   assignPc(items,paychecks){ return items.map(i=>{ if(!i.dueDate) return {...i,pc:(i.pc&&paychecks.find(p=>p.id===i.pc))?i.pc:null}; const w=paychecks.find(p=>i.dueDate>=p.start&&i.dueDate<=p.end); return {...i,pc:w?w.id:null}; }); }
   planningPaycheck(){ const t=this.today(); const fut=this.state.paychecks.filter(p=>p.end>=t).sort((a,b)=>a.start.localeCompare(b.start)); const withItems=fut.find(p=>this.state.items.some(i=>i.pc===p.id&&i.amount)); return withItems||fut[0]||this.state.paychecks[this.state.paychecks.length-1]||null; }
+
+  paydayFromNote(text){
+    const src=String(text||'');
+    const m=src.match(/\bPAYDAYS?\b([\s\S]*?)(?=\b(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\b|$)/i);
+    if(!m) return null;
+    const dates=[...m[1].matchAll(/\b\d{1,2}\/\d{1,2}\b/g)].map(x=>this.normDate(x[0])).filter(Boolean);
+    if(!dates.length) return null;
+    const today=this.today();
+    const date=dates.find(d=>d>=today)||dates[0];
+    const am=m[1].match(/(?:^|\s)(\$?\s*[0-9][0-9,]*(?:\.\d{2})?)(?=\s|$)/);
+    const amount=am?+am[1].replace(/[$,\s]/g,''):null;
+    return {date,dates,amount,freq:'biweekly',vary:false};
+  }
 
   parseNote(text){
     const amtRe=/\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)/;
@@ -913,7 +943,7 @@ class Component extends DCLogic {
   openSettings(){ this.setState({settings:true}); }
   closeSettings(){ this.setState({settings:false}); }
 
-  pickFile(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.txt,.md,text/plain,text/markdown'; inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ const text=String(rd.result||''); const parsed=this.parseNote(text); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({pasteText:text,parsed,parsedSel:sel,obMethod:'paste',obStep:2.5}); }; rd.readAsText(f); }; inp.click(); }
+  pickFile(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.txt,.md,text/plain,text/markdown'; inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ const text=String(rd.result||''); const parsed=this.parseNote(text); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(text); this.setState({pasteText:text,parsed,parsedSel:sel,payday:pd?{...this.state.payday,...pd}:this.state.payday,obMethod:'paste',obStep:2.5}); }; rd.readAsText(f); }; inp.click(); }
 
   importParsed(){
     const s=this.state; const sel=s.parsedSel||{}; const parsed=(s.parsed||[]).filter(p=>sel[p._i]!==false&&p.type!=='unknown'&&p.type!=='paycheck');
@@ -927,7 +957,7 @@ class Component extends DCLogic {
     if(newItems.length) this.setState(st=>({items:[...st.items,...newItems]}));
   }
 
-  finishOnboarding(){ const s=this.state; const pcs=this.generatePaychecks(s.payday); const items=this.assignPc(s.items,pcs); const tab=s.homeView==='paycheck'?'money':(s.homeView==='calendar'?'calendar':'today'); this.setState({paychecks:pcs,items,onboarded:true,phase:'app',tab,moneySub:'paychecks',obStep:1}); }
+  finishOnboarding(){ const s=this.state; const pd=this.paydayFromNote(s.pasteText)||s.payday; const fixedPd={...pd,date:this.coerceDate(pd.date)}; const pcs=this.generatePaychecks(fixedPd); const items=this.assignPc(s.items,pcs); const tab=s.homeView==='paycheck'?'money':(s.homeView==='calendar'?'calendar':'today'); this.setState({payday:fixedPd,paychecks:pcs,items,onboarded:true,phase:'app',tab,moneySub:'paychecks',obStep:1}); }
 
   obNext(){ const s=this.state; if(s.phase!=='onboarding') return; const step=s.obStep;
     if(step===2){
@@ -935,7 +965,7 @@ class Component extends DCLogic {
       if(s.obMethod==='upload'){ this.pickFile(); return; }
       this.setState({parsed:[],parsedSel:{},obStep:3}); return;
     }
-    if(step===2.5){ const parsed=this.parseNote(s.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({parsed,parsedSel:sel,obStep:3}); return; }
+    if(step===2.5){ const parsed=this.parseNote(s.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(s.pasteText); this.setState({parsed,parsedSel:sel,payday:pd?{...s.payday,...pd}:s.payday,obStep:3}); return; }
     if(step===4){ this.importParsed(); this.setState({obStep:5}); return; }
     if(step>=6){ this.finishOnboarding(); return; }
     this.setState({obStep:step+1});
@@ -964,7 +994,7 @@ class Component extends DCLogic {
     v.obMethods=methods.map(m=>{const sel=S.obMethod===m.key;return {...m,selected:sel,iconBg:sel?'#F8DCE3':'#F5EDEA',onClick:()=>this.setState({obMethod:m.key}),style:`width:100%;display:flex;align-items:center;gap:14px;background:#FFFFFF;border:2px solid ${sel?'#C97C93':'transparent'};border-radius:18px;padding:14px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);`};});
     v.pasteText=S.pasteText;
     v.onPasteChange=e=>this.setState({pasteText:e.target.value});
-    v.onParse=()=>{ const parsed=this.parseNote(S.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); this.setState({parsed,parsedSel:sel,obStep:3}); };
+    v.onParse=()=>{ const parsed=this.parseNote(S.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(S.pasteText); this.setState({parsed,parsedSel:sel,payday:pd?{...S.payday,...pd}:S.payday,obStep:3}); };
     const freqs=[{key:'weekly',label:'Weekly'},{key:'biweekly',label:'Biweekly'},{key:'twicemonthly',label:'Twice monthly'},{key:'monthly',label:'Monthly'},{key:'custom',label:'Custom'}];
     v.payFreqOptions=freqs.map(f=>{const sel=S.payday.freq===f.key;return {...f,onClick:()=>this.setState({payday:{...S.payday,freq:f.key}}),style:`padding:10px 16px;border-radius:14px;border:none;background:${sel?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${sel?'#fff':'#4A3436'};font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.12);`};});
     v.payDate=S.payday.date||''; v.payAmount=S.payday.amount!=null?String(S.payday.amount):'';
