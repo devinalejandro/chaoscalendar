@@ -225,6 +225,27 @@ due-date assignment always overwrites a bill instance's paycheck, so a future
 tracked for the M2 budgeting UI.
 
 | M2 | Paychecks: windows engine + budgeting view + Today tab | Karla's June data reproduces correct Total/Bills/Left per window; no `Invalid date` possible |
+
+**M2 status (2026-07-02): Today + Paychecks wired to the M1 data model.**
+`store/useHouseholdStore.ts` is a factory (`createHouseholdStore(storage)`)
+bound to real `localStorage` in the browser and to isolated in-memory
+storage in tests — first run seeds the Karla demonstration household from
+M1, but never reseeds over real (even empty-of-bills) household data. Today
+shows the current pay-period `WindowSummaryCard`, a due-soon list across all
+windows, and a validated quick-add form (title/amount/date → an ad-hoc
+`BillInstance`, immediately assigned to its paycheck window). Paychecks
+lists every window with Total/Bills/Left/Count and its bill list, current
+window highlighted. Shared `ui/WindowSummaryCard` and `ui/BillList`
+eliminate duplication between the two pages. Verified live in the browser:
+Karla's seeded numbers reproduce correctly (Mortgage $1,524.55 + Netflix
+$29.34 + STRATA CC $45 = Bills $1,598.89, Left $294.59 against a $1,893.48
+paycheck), marking paid and quick-add both update totals and persist across
+reload, and the empty-window case renders its placeholder instead of
+crashing. `formatDisplay` (lib/dates.ts) falls back to the raw string for an
+invalid date instead of rendering `Invalid Date`, closing the PRD's core
+complaint. 64/64 tests pass (7 new store tests), `tsc -b` + `vite build` +
+lint all clean. Calendar and Bills tabs remain M3/M5 placeholders.
+
 | M3 | Bills: template library + instance materializer + history | Templates generate 6 months of instances idempotently |
 | M4 | Import: parser port + fixtures + full review flow | Real paste → grouped review → accept; nothing saves unreviewed |
 | M5 | Prediction calculator + Calendar tab | Projections match hand-computed fixtures; goal/vacation planners answer PRD examples |

@@ -1,8 +1,42 @@
+import { useHouseholdStore } from '../../store/useHouseholdStore'
+import { summarizeWindow } from '../../lib/windows'
+import { formatDisplay, iso } from '../../lib/dates'
+import { WindowSummaryCard } from '../../ui/WindowSummaryCard'
+import { BillList } from '../../ui/BillList'
+
 export default function PaychecksPage() {
+  const snapshot = useHouseholdStore((s) => s.snapshot)
+  const markPaid = useHouseholdStore((s) => s.markPaid)
+  const todayIso = iso(new Date())
+
+  const windows = [...snapshot.data.paychecks]
+    .sort((a, b) => a.payDate.localeCompare(b.payDate))
+    .map((paycheck) => ({ paycheck, summary: summarizeWindow(paycheck, snapshot.data.billInstances) }))
+
+  if (!windows.length) {
+    return (
+      <div className="card">
+        <p className="placeholder">No paycheck windows yet.</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="card">
-      <strong>Paychecks</strong>
-      <p className="placeholder">Window cards, budgeting view, and the prediction calculator arrive in M2/M5.</p>
+    <div className="stack">
+      {windows.map(({ paycheck, summary }) => {
+        const current = todayIso >= paycheck.periodStart && todayIso <= paycheck.periodEnd
+        return (
+          <WindowSummaryCard
+            key={paycheck.id}
+            paycheck={paycheck}
+            summary={summary}
+            label={`${formatDisplay(paycheck.payDate)} paycheck`}
+            current={current}
+          >
+            <BillList instances={summary.instances} onTogglePaid={markPaid} emptyLabel="No bills in this window." />
+          </WindowSummaryCard>
+        )
+      })}
     </div>
   )
 }

@@ -40,3 +40,11 @@ export function addDays(isoDate: string, days: number): string {
   d.setDate(d.getDate() + days)
   return iso(d)
 }
+
+/** Short display form ("Jul 6") for a valid ISO date. Falls back to the raw
+    string for invalid input so a bad date is visible, not a JS "Invalid Date". */
+export function formatDisplay(isoDate: string): string {
+  if (!isValidIso(isoDate)) return isoDate
+  const d = new Date(isoDate + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
