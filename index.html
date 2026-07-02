@@ -252,8 +252,7 @@
           <div style="font-size:38px;font-weight:800;color:#fff;margin:10px 0 2px;letter-spacing:-1px;">{{ pc.leftStr }}</div>
           <div style="font-size:14px;color:rgba(255,255,255,.85);margin-bottom:14px;">left to spend this window</div>
           <div style="height:8px;border-radius:4px;background:rgba(255,255,255,.35);overflow:hidden;margin-bottom:16px;display:flex;">
-            <div style="width:{{ pc.spentPct }};background:#fff;"></div>
-            <div style="width:{{ pc.paidPct }};background:rgba(255,255,255,.65);"></div>
+            <div style="width:{{ pc.billsPct }};background:#fff;"></div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="display:flex;gap:18px;">
@@ -327,6 +326,24 @@
 
         <sc-if value="{{ isMoneyPay }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <div>
+                  <div style="font-size:16px;font-weight:800;color:#4A3436;">Prediction calculator</div>
+                  <div style="font-size:12.5px;color:#9C7F76;margin-top:2px;">Based on upcoming paycheck windows and fixed bills.</div>
+                </div>
+                <span style="font-size:20px;color:#C97C93;">✧</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Next 4 left</div><div style="font-size:15px;font-weight:800;color:#8CA679;">{{ pred.next4Str }}</div></div>
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Next 8 left</div><div style="font-size:15px;font-weight:800;color:#8CA679;">{{ pred.next8Str }}</div></div>
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Avg left</div><div style="font-size:15px;font-weight:800;color:#4A3436;">{{ pred.avgStr }}</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <input value="{{ predGoal }}" onChange="{{ onPredGoal }}" inputmode="decimal" placeholder="Vacation goal" style="flex:1;min-width:0;height:44px;background:#FBF3F1;border:none;border-radius:14px;padding:0 13px;color:#4A3436;font-size:14.5px;outline:none;"/>
+                <div style="min-width:112px;text-align:right;"><div style="font-size:11px;color:#9C7F76;">Paychecks</div><div style="font-size:15px;font-weight:800;color:#C97C93;">{{ pred.goalStr }}</div></div>
+              </div>
+            </div>
             <sc-for list="{{ paychecks }}" as="p" hint-placeholder-count="3">
               <div onClick="{{ p.onOpen }}" style="background:#FFFFFF;border-radius:20px;padding:16px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);position:relative;{{ p.ring }}">
                 <span style="position:absolute;top:12px;right:16px;font-size:12px;color:#F1B9C7;">✧</span>
@@ -335,12 +352,11 @@
                   <div style="text-align:right;"><div style="font-size:12px;color:#9C7F76;">Income</div><div style="font-size:17px;font-weight:800;color:#8CA679;">{{ p.amountStr }}</div></div>
                 </div>
                 <div style="height:7px;border-radius:4px;background:#F5E7EA;overflow:hidden;margin:14px 0 12px;display:flex;">
-                  <div style="width:{{ p.paidPct }};background:#8CA679;"></div><div style="width:{{ p.unpaidPct }};background:#E3B87C;"></div>
+                  <div style="width:{{ p.billsPct }};background:#C97C93;"></div>
                 </div>
                 <div style="display:flex;justify-content:space-between;">
-                  <div><div style="font-size:11.5px;color:#9C7F76;">Planned</div><div style="font-size:14px;font-weight:700;">{{ p.plannedStr }}</div></div>
-                  <div><div style="font-size:11.5px;color:#9C7F76;">Paid</div><div style="font-size:14px;font-weight:700;color:#8CA679;">{{ p.paidStr }}</div></div>
-                  <div><div style="font-size:11.5px;color:#9C7F76;">Unpaid</div><div style="font-size:14px;font-weight:700;color:#E3B87C;">{{ p.unpaidStr }}</div></div>
+                  <div><div style="font-size:11.5px;color:#9C7F76;">Total</div><div style="font-size:14px;font-weight:700;">{{ p.amountStr }}</div></div>
+                  <div><div style="font-size:11.5px;color:#9C7F76;">Bills</div><div style="font-size:14px;font-weight:700;color:#C97C93;">{{ p.billsStr }}</div></div>
                   <div><div style="font-size:11.5px;color:#9C7F76;">Left</div><div style="font-size:14px;font-weight:700;color:{{ p.leftColor }};">{{ p.leftStr }}</div></div>
                 </div>
               </div>
@@ -480,10 +496,10 @@
     <div style="background:linear-gradient(150deg,#F1B9C7,#D98CA0);border-radius:22px;padding:18px;margin-bottom:18px;box-shadow:0 14px 26px rgba(201,124,144,.25);">
       <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:30px;font-weight:800;color:#fff;">{{ ovPc.leftStr }}</span><span style="font-size:13px;color:rgba(255,255,255,.8);">left this window</span></div>
       <div style="display:flex;justify-content:space-between;margin-top:16px;">
-        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Income</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.amountStr }}</div></div>
-        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Planned</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.plannedStr }}</div></div>
-        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Paid</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.paidStr }}</div></div>
-        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Unpaid</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.unpaidStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Total</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.amountStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Bills</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.billsStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Left</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.leftStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Due</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.billCountStr }}</div></div>
       </div>
     </div>
     <div style="font-size:13px;font-weight:800;color:#4A3436;margin:0 4px 10px;">Assigned items</div>
@@ -794,7 +810,7 @@ class Component extends DCLogic {
       obStep:1, obMethod:'paste', pasteText:DEFAULT_NOTE, parsed, parsedSel,
       tab:homeTab, moneySub:'paychecks',
       calMode:'month', calYear:now.getFullYear(), calMonth0:now.getMonth(),
-      selectedDate:this.iso(now),
+      selectedDate:this.iso(now), predictGoal:'',
       overlay:null, modal:null, draft:null, settings:false, info:null, DEFAULT_NOTE,
     };
     return {...transient, ...data, phase: data.onboarded?'app':'onboarding'};
@@ -829,7 +845,7 @@ class Component extends DCLogic {
 
   chkVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,amountStr:this.money(it.amount),metaStr:this.billMeta(it),metaColor:this.metaColor(it),checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),amountStyle:this.amtStyle(paid),icon:this.catIcon(it.category),catBg:this.catBg(it.category),catFg:this.catFg(it.category),onToggle:()=>this.togglePaid(it.id),onOpen:()=>this.openModal(it.id)}; }
   taskVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),onToggle:()=>this.togglePaid(it.id)}; }
-  pcCalc(pc){ const its=this.state.items.filter(i=>i.pc===pc.id&&i.amount); const planned=its.reduce((s,i)=>s+i.amount,0); const paid=its.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0); const unpaid=planned-paid; const left=pc.amount-planned; const uc=its.filter(i=>!i.paid).length; const pcnt=its.filter(i=>i.paid).length; return {planned,paid,unpaid,left,uc,pcnt,its}; }
+  pcCalc(pc){ const its=this.state.items.filter(i=>i.pc===pc.id&&i.amount); const bills=its.reduce((s,i)=>s+i.amount,0); const paid=its.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0); const unpaid=bills-paid; const left=pc.amount-bills; const uc=its.filter(i=>!i.paid).length; const pcnt=its.filter(i=>i.paid).length; return {planned:bills,bills,paid,unpaid,left,uc,pcnt,its}; }
 
   // ---- paycheck scheduling ----
   generatePaychecks(payday){
@@ -1023,14 +1039,16 @@ class Component extends DCLogic {
     v.goMoney=()=>this.go('money');
     v.onRestart=()=>this.setState({phase:'onboarding',obStep:1,settings:false});
     v.onClearData=()=>{ if(confirm('Clear all data and start fresh? This permanently removes everything saved on this device.')) this.clearAll(); };
+    v.predGoal=S.predictGoal||'';
+    v.onPredGoal=e=>this.setState({predictGoal:e.target.value});
 
     const pcP=this.planningPaycheck();
 
     // Today
-    if(pcP){ const c=this.pcCalc(pcP); const spentPct=pcP.amount?Math.min(100,(c.unpaid/pcP.amount*100)):0; const paidPct=pcP.amount?Math.min(100-spentPct,(c.paid/pcP.amount*100)):0; const nextP=S.paychecks.filter(p=>p.start>pcP.start).sort((a,b)=>a.start.localeCompare(b.start))[0];
-      v.pc={ windowStr:this.md(pcP.start)+' – '+this.md(pcP.end), leftStr:this.money(c.left), spentPct:spentPct+'%', paidPct:paidPct+'%', nextStr:nextP?this.md(nextP.date):'—', countStr:c.uc+' unpaid · '+c.pcnt+' paid', stats:[{label:'Income',value:this.money(pcP.amount)},{label:'Planned',value:this.money(c.planned)},{label:'Paid',value:this.money(c.paid)}] };
+    if(pcP){ const c=this.pcCalc(pcP); const billsPct=pcP.amount?Math.min(100,(c.bills/pcP.amount*100)):0; const nextP=S.paychecks.filter(p=>p.start>pcP.start).sort((a,b)=>a.start.localeCompare(b.start))[0];
+      v.pc={ windowStr:this.md(pcP.start)+' – '+this.md(pcP.end), leftStr:this.money(c.left), billsPct:billsPct+'%', nextStr:nextP?this.md(nextP.date):'—', countStr:c.its.length+' bills due', stats:[{label:'Total',value:this.money(pcP.amount)},{label:'Bills',value:this.money(c.bills)},{label:'Left',value:this.money(c.left)}] };
       const due=S.items.filter(i=>(i.type==='bill'||i.type==='event')&&i.pc===pcP.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,4); v.dueSoon=due.map(i=>this.chkVm(i));
-    } else { v.pc={windowStr:'',leftStr:'',spentPct:'0%',paidPct:'0%',nextStr:'—',countStr:'',stats:[]}; v.dueSoon=[]; }
+    } else { v.pc={windowStr:'',leftStr:'',billsPct:'0%',nextStr:'—',countStr:'',stats:[]}; v.dueSoon=[]; }
     v.famReminders=S.items.filter(i=>i.type==='task').map(i=>this.taskVm(i));
     const dowLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const tdyIso=this.today();
@@ -1042,7 +1060,12 @@ class Component extends DCLogic {
     v.moneySubs=msubs.map(m=>({...m,onClick:()=>this.setState({moneySub:m.key}),style:`padding:9px 16px;border-radius:16px;white-space:nowrap;border:none;background:${S.moneySub===m.key?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${S.moneySub===m.key?'#fff':'#4A3436'};font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.10);`}));
     v.isMoneyPay=S.moneySub==='paychecks'; v.isMoneyBills=S.moneySub==='bills'; v.isMoneyEvents=S.moneySub==='events'; v.isMoneyHistory=S.moneySub==='history';
     const visiblePcs=S.paychecks.filter(p=>p.end>=this.today()||S.items.some(i=>i.pc===p.id&&i.amount)).sort((a,b)=>a.start.localeCompare(b.start)).slice(0,8);
-    v.paychecks=visiblePcs.map(p=>{const c=this.pcCalc(p);const pp=p.amount?(c.paid/p.amount*100):0;const up=p.amount?(c.unpaid/p.amount*100):0;return {id:p.id,dateStr:this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),plannedStr:this.money(c.planned),paidStr:this.money(c.paid),unpaidStr:this.money(c.unpaid),leftStr:this.money(c.left),leftColor:c.left<0?'#C0605A':'#8CA679',paidPct:Math.min(100,pp)+'%',unpaidPct:Math.min(100-pp,up)+'%',ring:(pcP&&p.id===pcP.id)?'border:2px solid #F1B9C7;':'',onOpen:()=>this.openOverlay('paycheck',p.id)};});
+    const proj=visiblePcs.map(p=>({p,c:this.pcCalc(p)}));
+    const sumLeft=(rows)=>rows.reduce((s,r)=>s+r.c.left,0);
+    const next4=sumLeft(proj.slice(0,4)), next8=sumLeft(proj.slice(0,8)), avg=proj.length?sumLeft(proj)/proj.length:0;
+    const goal=+(String(S.predictGoal||'').replace(/[$,\s]/g,''))||0;
+    v.pred={next4Str:this.money(next4),next8Str:this.money(next8),avgStr:this.money(avg),goalStr:goal&&avg>0?Math.ceil(goal/avg)+'':'—'};
+    v.paychecks=proj.map(({p,c})=>{const billsPct=p.amount?Math.min(100,(c.bills/p.amount*100)):0;return {id:p.id,dateStr:this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),billsStr:this.money(c.bills),leftStr:this.money(c.left),leftColor:c.left<0?'#C0605A':'#8CA679',billsPct:billsPct+'%',ring:(pcP&&p.id===pcP.id)?'border:2px solid #F1B9C7;':'',onOpen:()=>this.openOverlay('paycheck',p.id)};});
     v.billsList=S.items.filter(i=>i.type==='bill').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(i=>this.chkVm(i));
     v.eventsList=S.items.filter(i=>i.type==='event').map(i=>({title:i.title,metaStr:this.md(i.dueDate),amountStr:this.money(i.amount),icon:this.catIcon(i.category),catBg:this.catBg(i.category),catFg:this.catFg(i.category),onOpen:()=>this.openModal(i.id)}));
     v.paidHistory=S.items.filter(i=>i.paid).map(i=>({title:i.title,metaStr:'Paid '+this.md(i.paidDate||i.dueDate),amountStr:this.money(i.amount)}));
@@ -1050,7 +1073,7 @@ class Component extends DCLogic {
     // Paycheck overlay
     const ov=S.overlay;
     v.showPaycheckOv=!!ov&&ov.kind==='paycheck';
-    if(v.showPaycheckOv){const p=S.paychecks.find(x=>x.id===ov.id);const c=this.pcCalc(p);v.ovPc={dateStr:'Paycheck '+this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),plannedStr:this.money(c.planned),paidStr:this.money(c.paid),unpaidStr:this.money(c.unpaid),leftStr:this.money(c.left),items:c.its.map(i=>this.chkVm(i))};} else v.ovPc={items:[]};
+    if(v.showPaycheckOv){const p=S.paychecks.find(x=>x.id===ov.id);const c=this.pcCalc(p);v.ovPc={dateStr:'Paycheck '+this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),billsStr:this.money(c.bills),leftStr:this.money(c.left),billCountStr:c.its.length+'',items:c.its.map(i=>this.chkVm(i))};} else v.ovPc={items:[]};
     v.closeOverlay=()=>this.closeOverlay();
 
     // Calendar
