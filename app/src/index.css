@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import './ui/tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--aurora-ink);
+  background: var(--aurora-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* app shell */
+.shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px 96px;
+}
+
+@media (min-width: 760px) {
+  .shell {
+    max-width: 960px;
+  }
+}
+
+.shell-header {
+  padding: 18px 4px 10px;
+  text-align: center;
+}
+
+.shell-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.shell-header .sub {
+  font-size: 12.5px;
+  color: var(--aurora-muted);
+  font-weight: 600;
+}
+
+.tabbar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  background: var(--aurora-card);
+  border-radius: 999px;
+  padding: 6px;
+  box-shadow: var(--shadow-float);
+  z-index: 40;
+}
+
+.tabbar a {
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--aurora-accent);
+}
+
+.tabbar a.active {
+  background: var(--aurora-hero);
+  color: #fff;
+}
+
+.card {
+  background: var(--aurora-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.placeholder {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--aurora-muted);
+  font-size: 14px;
+}

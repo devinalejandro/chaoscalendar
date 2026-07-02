@@ -1,0 +1,40 @@
+/* Aurora design tokens — extracted from the live prototype (index.html).
+   Palette, radii, and shadows must stay visually identical to the soft
+   vintage theme. */
+:root {
+  /* palette */
+  --aurora-pink: #f1b9c7;
+  --aurora-rose: #d98ca0;
+  --aurora-accent: #c97c93;
+  --aurora-ink: #4a3436;
+  --aurora-ink-soft: #7c6460;
+  --aurora-muted: #9c7f76;
+  --aurora-danger: #c0605a;
+  --aurora-danger-bg: #fbe4e4;
+  --aurora-success: #8ca679;
+  --aurora-card: #ffffff;
+  --aurora-line: #f5e7ea;
+  --aurora-bg-0: #fff8f6;
+  --aurora-bg-1: #f8ece9;
+  --aurora-bg-2: #efe2f0;
+
+  /* gradients */
+  --aurora-hero: linear-gradient(135deg, var(--aurora-pink), var(--aurora-rose));
+  --aurora-bg: linear-gradient(150deg, var(--aurora-bg-0) 0%, var(--aurora-bg-1) 44%, var(--aurora-bg-2) 100%);
+
+  /* radii */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+
+  /* shadows */
+  --shadow-card: 0 4px 14px rgba(201, 124, 144, 0.1);
+  --shadow-float: 0 12px 28px rgba(201, 124, 144, 0.28);
+
+  /* type */
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* touch */
+  --touch-target: 44px;
+}
