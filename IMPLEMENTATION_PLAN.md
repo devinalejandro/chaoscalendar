@@ -201,6 +201,29 @@ and `netlify.toml` untouched — the live static app still deploys exactly as
 before; the new app is dev/preview only until cutover. Remaining M0 items:
 Supabase project + SQL migrations, CI, Netlify preview wiring.
 | M1 | Data safety core: zod schemas, local cache w/ versioning, repair pass, backups, export | Corrupt/legacy fixtures load without data loss; repair report correct |
+
+**M1 status (2026-07-02): core finance model landed in `app/`.** Versioned
+`Snapshot` cache (`schemaVersion` 2→3, `src/data/migrate/`) with a chained
+migration entry point that quarantines corrupt/unrecognized JSON under
+`aurora.corrupt.<ts>` instead of discarding it — `loadHouseholdSnapshot`
+never resets a household to empty on bad data. Pure functional service layer
+(`src/data/repository.ts`) for bill/paycheck/recurrence-rule CRUD, paid
+marking, and idempotent instance regeneration, backed by a swappable
+`KeyValueStorage` (memory for tests, `window.localStorage` in the browser).
+Paycheck-window generator ported (`src/lib/windows.ts`: weekly/biweekly/
+twice-monthly/monthly/explicit-paydays, window-summary totals) plus a new
+recurrence engine (`src/lib/recurrence.ts`) and Bill→BillInstance
+materializer (`src/lib/billInstances.ts`) — templates generate instances,
+never mutate them, and re-running materialization is a no-op. Seed data
+(`src/data/seed.ts`) builds a full household from the real numbers in
+FINANCE_APP_PRD.md's paste examples, cross-checked against the parser
+fixtures. 57/57 tests pass, `tsc -b` + `vite build` + lint all clean. Not yet
+done: export JSON/CSV, backups-before-migration, UI wiring (still M2+).
+Known limitation carried from windows.ts (documented in code): automatic
+due-date assignment always overwrites a bill instance's paycheck, so a future
+"move to next paycheck" manual override won't survive regeneration yet —
+tracked for the M2 budgeting UI.
+
 | M2 | Paychecks: windows engine + budgeting view + Today tab | Karla's June data reproduces correct Total/Bills/Left per window; no `Invalid date` possible |
 | M3 | Bills: template library + instance materializer + history | Templates generate 6 months of instances idempotently |
 | M4 | Import: parser port + fixtures + full review flow | Real paste → grouped review → accept; nothing saves unreviewed |

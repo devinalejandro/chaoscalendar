@@ -85,6 +85,24 @@ export const BillInstance = z.object({
 })
 export type BillInstance = z.infer<typeof BillInstance>
 
+export const RecurrenceFrequency = z.enum(['monthly', 'weekly', 'biweekly', 'custom_days'])
+export type RecurrenceFrequency = z.infer<typeof RecurrenceFrequency>
+
+/** Drives BillInstance materialization (lib/billInstances.ts). Bill.recurrenceRuleId
+    points here; a Bill without a rule and without its own dueDate produces no instances. */
+export const RecurrenceRule = z.object({
+  id: Id,
+  householdId: Id,
+  frequency: RecurrenceFrequency,
+  /** monthly: day of month, clamped to the last day of short months */
+  dayOfMonth: z.number().int().min(1).max(31).optional(),
+  /** weekly/biweekly/custom_days: date the cadence is anchored to */
+  anchorDate: IsoDate.optional(),
+  /** custom_days: repeat every N days from anchorDate */
+  intervalDays: z.number().int().positive().optional(),
+})
+export type RecurrenceRule = z.infer<typeof RecurrenceRule>
+
 export const ImportBatch = z.object({
   id: Id,
   householdId: Id,
@@ -139,8 +157,9 @@ export const AuditEvent = z.object({
 export type AuditEvent = z.infer<typeof AuditEvent>
 
 /** Versioned envelope for the local cache; every shape change bumps this and
-    adds a migration in src/data/migrate/. */
-export const SCHEMA_VERSION = 2
+    adds a migration in src/data/migrate/.
+    v3: added recurrenceRules (see src/data/migrate/v3.ts). */
+export const SCHEMA_VERSION = 3
 
 export const Snapshot = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
@@ -152,6 +171,7 @@ export const Snapshot = z.object({
     bills: z.array(Bill).default([]),
     billInstances: z.array(BillInstance).default([]),
     goals: z.array(Goal).default([]),
+    recurrenceRules: z.array(RecurrenceRule).default([]),
   }),
 })
 export type Snapshot = z.infer<typeof Snapshot>
