@@ -426,6 +426,22 @@ Netlify build, `/admin`, `/legacy`, `/migration`, backup export, and phone PWA
 verification. 117/117 tests pass, `tsc -b`, `vite build`, lint, and
 `netlify build` are clean.
 
+| M13 | Supabase sync contract | Snapshot sync has a typed REST boundary and database table |
+
+**M13 status (2026-07-03):** Supabase sync wiring started without adding a new
+runtime package. Added `cloud_snapshots` SQL migration with household-scoped
+RLS, plus a typed REST request builder for snapshot push/pull using the existing
+public Supabase env boundary. Admin now reports whether cloud sync is actually
+ready: Supabase env present plus a household id in the current snapshot.
+
+| M14 | Audit/history hardening | Local mutations write recent audit history visible in Admin |
+
+**M14 status (2026-07-03):** Local audit history landed. The store records
+bounded audit events for paid toggles, quick add, bill create/update/active
+changes, imports, goals, snapshot restore, and restore undo. Admin shows recent
+history so updates and recovery actions are not invisible. 122/122 tests pass,
+`tsc -b`, `vite build`, and lint are clean.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

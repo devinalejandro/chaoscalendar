@@ -19,6 +19,7 @@ import { newId } from '../lib/id'
 import { addMonths, iso } from '../lib/dates'
 import { buildRecurrenceRule, type RecurrenceInput } from '../lib/recurrence'
 import { dayOfMonth, findMatchingBillTemplate, inferBillCategory } from '../lib/billLearning'
+import { appendAuditEvent } from '../lib/audit'
 
 const DEVICE_ID_KEY = 'aurora.deviceId'
 
@@ -122,16 +123,28 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
       saveSnapshot(storage, next)
       set({ snapshot: next })
     }
+    const persistAudited = (
+      next: Snapshot,
+      event: { action: string; entityType: string; entityId: string; before?: unknown; after?: unknown },
+    ) => {
+      persist(appendAuditEvent(next, event))
+    }
 
     return {
       snapshot: initialSnapshot,
       lastReplacedSnapshot: null,
       quarantined: loaded.quarantined,
       markPaid: (instanceId, paidDate) => {
-        persist(markInstancePaid(get().snapshot, instanceId, paidDate ?? iso(new Date())))
+        const before = get().snapshot.data.billInstances.find((i) => i.id === instanceId)
+        const next = markInstancePaid(get().snapshot, instanceId, paidDate ?? iso(new Date()))
+        const after = next.data.billInstances.find((i) => i.id === instanceId)
+        persistAudited(next, { action: 'bill_instance.mark_paid', entityType: 'billInstance', entityId: instanceId, before, after })
       },
       unmarkPaid: (instanceId) => {
-        persist(unmarkInstancePaid(get().snapshot, instanceId))
+        const before = get().snapshot.data.billInstances.find((i) => i.id === instanceId)
+        const next = unmarkInstancePaid(get().snapshot, instanceId)
+        const after = next.data.billInstances.find((i) => i.id === instanceId)
+        persistAudited(next, { action: 'bill_instance.unmark_paid', entityType: 'billInstance', entityId: instanceId, before, after })
       },
       setInstancePaid: (instanceId, paid) => {
         if (paid) get().markPaid(instanceId)
@@ -151,7 +164,8 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           [...snapshot.data.billInstances, instance],
           snapshot.data.paychecks,
         )
-        persist({ ...snapshot, data: { ...snapshot.data, billInstances } })
+        const next = { ...snapshot, data: { ...snapshot.data, billInstances } }
+        persistAudited(next, { action: 'bill_instance.quick_add', entityType: 'billInstance', entityId: instance.id, after: instance })
       },
       saveBill: (input) => {
         const snapshot = get().snapshot
@@ -190,7 +204,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         next = resetFutureInstancesForBill(next, billId, iso(new Date()))
         const { from, to } = defaultHorizon(next)
         next = regenerateInstances(next, from, to)
-        persist(next)
+        persistAudited(next, { action: input.id ? 'bill.update' : 'bill.create', entityType: 'bill', entityId: billId, before: previous, after: bill })
       },
       setBillActive: (billId, active) => {
         const snapshot = get().snapshot
@@ -205,7 +219,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         next = resetFutureInstancesForBill(next, billId, iso(new Date()))
         const { from, to } = defaultHorizon(next)
         next = regenerateInstances(next, from, to)
-        persist(next)
+        persistAudited(next, { action: active ? 'bill.activate' : 'bill.deactivate', entityType: 'bill', entityId: billId, before: bill, after: { ...bill, active } })
       },
       applyImport: (items) => {
         if (!items.length) return
@@ -295,32 +309,34 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           next = regenerateInstances(next, from, to)
         }
 
-        persist(next)
+        persistAudited(next, { action: 'import.apply', entityType: 'import', entityId: newId('import'), after: { acceptedCount: items.length } })
       },
       saveGoal: (input) => {
         const snapshot = get().snapshot
         const householdId = snapshot.data.household?.id ?? 'hh_local'
-        persist(
-          upsertGoal(snapshot, {
-            id: input.id ?? newId('goal'),
+        const goalId = input.id ?? newId('goal')
+        const before = snapshot.data.goals.find((g) => g.id === goalId)
+        const goal = {
+            id: goalId,
             householdId,
             name: input.name,
             targetAmount: input.targetAmount,
             targetDate: input.targetDate,
             currentAmount: input.currentAmount ?? 0,
             status: 'active',
-          }),
-        )
+          } as const
+        persistAudited(upsertGoal(snapshot, goal), { action: input.id ? 'goal.update' : 'goal.create', entityType: 'goal', entityId: goalId, before, after: goal })
       },
       replaceSnapshot: (snapshot) => {
         set({ lastReplacedSnapshot: get().snapshot })
-        persist(snapshot)
+        persistAudited(snapshot, { action: 'snapshot.replace', entityType: 'snapshot', entityId: snapshot.data.household?.id ?? 'local', after: { schemaVersion: snapshot.schemaVersion } })
       },
       undoReplaceSnapshot: () => {
         const previous = get().lastReplacedSnapshot
         if (!previous) return
-        saveSnapshot(storage, previous)
-        set({ snapshot: previous, lastReplacedSnapshot: null })
+        const next = appendAuditEvent(previous, { action: 'snapshot.restore_undo', entityType: 'snapshot', entityId: previous.data.household?.id ?? 'local' })
+        saveSnapshot(storage, next)
+        set({ snapshot: next, lastReplacedSnapshot: null })
       },
     }
   })

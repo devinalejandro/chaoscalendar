@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useHouseholdStore } from '../../store/useHouseholdStore'
 import { buildAdminHealthReport, type HealthStatus } from '../../lib/adminHealth'
-import { isSupabaseConfigured } from '../../data/supabase'
+import { getSupabaseConfig, isSupabaseConfigured } from '../../data/supabase'
+import { canSyncSnapshot } from '../../data/supabaseSync'
+import { recentAuditEvents } from '../../lib/audit'
 
 const STATUS_LABEL: Record<HealthStatus, string> = {
   pass: 'Ready',
@@ -11,6 +13,8 @@ const STATUS_LABEL: Record<HealthStatus, string> = {
 
 export default function AdminPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
+  const syncReady = canSyncSnapshot(snapshot, getSupabaseConfig())
+  const auditEvents = recentAuditEvents(snapshot, 8)
   const report = buildAdminHealthReport({
     snapshot,
     supabaseConfigured: isSupabaseConfigured(),
@@ -53,6 +57,36 @@ export default function AdminPage() {
             Legacy app
           </a>
         </div>
+      </section>
+
+      <section className="card">
+        <div className="section-header">
+          <strong>Cloud sync</strong>
+          <span className={`confidence confidence-${syncReady ? 'high' : 'medium'}`}>
+            {syncReady ? 'Ready' : 'Local only'}
+          </span>
+        </div>
+        <p className="placeholder placeholder-tight">
+          {syncReady
+            ? 'Snapshot sync can use the Supabase cloud_snapshots table.'
+            : 'Set Supabase env and keep a household record before enabling cloud sync.'}
+        </p>
+      </section>
+
+      <section className="card">
+        <strong>Recent history</strong>
+        {auditEvents.length ? (
+          <ul className="audit-list">
+            {auditEvents.map((event) => (
+              <li key={event.id}>
+                <span>{event.action}</span>
+                <em>{new Date(event.createdAt).toLocaleString()}</em>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="placeholder placeholder-tight">No tracked changes yet.</p>
+        )}
       </section>
     </div>
   )

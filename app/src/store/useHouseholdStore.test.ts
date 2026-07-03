@@ -417,9 +417,10 @@ describe('createHouseholdStore recovery', () => {
 
     store.getState().undoReplaceSnapshot()
 
-    expect(store.getState().snapshot).toEqual(original)
+    expect({ ...store.getState().snapshot, data: { ...store.getState().snapshot.data, auditEvents: [] } }).toEqual(original)
+    expect(store.getState().snapshot.data.auditEvents[0]).toMatchObject({ action: 'snapshot.restore_undo' })
     expect(store.getState().lastReplacedSnapshot).toBeNull()
     const reopened = createHouseholdStore(storage)
-    expect(reopened.getState().snapshot).toEqual(original)
+    expect(reopened.getState().snapshot.data.auditEvents[0]).toMatchObject({ action: 'snapshot.restore_undo' })
   })
 })
