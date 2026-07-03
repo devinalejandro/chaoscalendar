@@ -69,15 +69,23 @@ export default function MigrationPage() {
         <p className="placeholder placeholder-tight">
           Paste or upload the JSON exported from the legacy app. Nothing is saved until you review and confirm below.
         </p>
-        <input className="field" type="file" accept="application/json,.json" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
-        <textarea
-          className="field textarea"
-          rows={10}
-          placeholder='{"items":[],"paychecks":[]}'
-          value={raw}
-          onChange={(e) => setRaw(e.target.value)}
-        />
-        {error && <p className="form-error">{error}</p>}
+        <label className="field-label">
+          Legacy export file
+          <input className="field" type="file" accept="application/json,.json" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
+        </label>
+        <label className="field-label">
+          Legacy export JSON
+          <textarea
+            className="field textarea"
+            rows={10}
+            placeholder='{"items":[],"paychecks":[]}'
+            value={raw}
+            onChange={(e) => setRaw(e.target.value)}
+          />
+        </label>
+        <div className="sr-status" aria-live="polite">
+          {error && <p className="form-error">{error}</p>}
+        </div>
         <button type="button" disabled={!raw.trim()} onClick={() => parseRaw()}>
           Review export
         </button>

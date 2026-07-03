@@ -18,36 +18,40 @@ const TABS = [
 
 export default function App() {
   return (
-    <div className="shell">
+    <div className="shell theme-romantic-light">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <header className="shell-header">
-        <div className="sub">Aurora Finance</div>
-        <h1>Yo Momma K's Calendar</h1>
-        <Link to="/import" className="import-entry">
-          Paste import
-        </Link>
-        <Link to="/migration" className="import-entry import-entry-secondary">
-          Legacy migration
-        </Link>
-        <Link to="/settings" className="import-entry import-entry-secondary">
-          Settings
-        </Link>
-        <Link to="/admin" className="import-entry import-entry-secondary">
-          Admin
-        </Link>
+        <div className="brand-block">
+          <div className="sub">Household finance planner</div>
+          <h1>Karla's Chaos Calendar</h1>
+        </div>
+        <details className="overflow-menu">
+          <summary aria-label="Open secondary navigation">Menu</summary>
+          <div className="overflow-menu-panel">
+            <Link to="/import">Paste import</Link>
+            <Link to="/migration">Legacy migration</Link>
+            <Link to="/settings">Settings</Link>
+            <Link to="/admin">Admin</Link>
+          </div>
+        </details>
         <AuthStatus />
       </header>
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/today" replace />} />
-        <Route path="/today" element={<TodayPage />} />
-        <Route path="/paychecks" element={<PaychecksPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/bills" element={<BillsPage />} />
-        <Route path="/import" element={<ImportPage />} />
-        <Route path="/migration" element={<MigrationPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-      </Routes>
+      <main id="main-content" tabIndex={-1}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/today" replace />} />
+          <Route path="/today" element={<TodayPage />} />
+          <Route path="/paychecks" element={<PaychecksPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/bills" element={<BillsPage />} />
+          <Route path="/import" element={<ImportPage />} />
+          <Route path="/migration" element={<MigrationPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </main>
 
       <nav className="tabbar" aria-label="Main">
         {TABS.map((t) => (

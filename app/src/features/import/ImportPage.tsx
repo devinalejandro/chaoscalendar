@@ -97,13 +97,16 @@ export default function ImportPage() {
           <p className="placeholder placeholder-tight">
             Paste your Apple Notes bill list. Nothing is saved until you review and accept it below.
           </p>
-          <textarea
-            className="field textarea"
-            rows={10}
-            placeholder={PLACEHOLDER}
-            value={pasteText}
-            onChange={(e) => setPasteText(e.target.value)}
-          />
+          <label className="field-label">
+            Bill notes
+            <textarea
+              className="field textarea"
+              rows={10}
+              placeholder={PLACEHOLDER}
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+            />
+          </label>
           <button type="button" disabled={!pasteText.trim()} onClick={parse}>
             Parse
           </button>
@@ -114,6 +117,7 @@ export default function ImportPage() {
 
   const groups = GROUP_ORDER.map((type) => ({ type, items: rows.filter((r) => r.suggestedType === type) })).filter((g) => g.items.length)
   const acceptedCount = rows.filter((r) => r.accepted && isAcceptable(r)).length
+  const needsReviewCount = rows.filter((r) => !isAcceptable(r)).length
 
   if (!groups.length) {
     return (
@@ -155,35 +159,47 @@ export default function ImportPage() {
                     />
                   </label>
                   <div className="import-fields">
-                    <input
-                      className="field"
-                      value={r.title}
-                      onChange={(e) => updateRow(r.id, { title: e.target.value })}
-                    />
-                    <select
-                      className="field"
-                      value={r.suggestedType}
-                      onChange={(e) => updateRow(r.id, { suggestedType: e.target.value as SuggestionType })}
-                    >
-                      {GROUP_ORDER.map((t) => (
-                        <option key={t} value={t}>
-                          {TYPE_LABELS[t]}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      className="field"
-                      placeholder="Amount"
-                      inputMode="decimal"
-                      value={r.amount != null ? (r.amount / 100).toString() : ''}
-                      onChange={(e) => updateRow(r.id, { amount: e.target.value.trim() ? parseCents(e.target.value) : null })}
-                    />
-                    <input
-                      className="field"
-                      type="date"
-                      value={r.date ?? ''}
-                      onChange={(e) => updateRow(r.id, { date: e.target.value || null })}
-                    />
+                    <label className="field-label import-field-label">
+                      Title
+                      <input
+                        className="field"
+                        value={r.title}
+                        onChange={(e) => updateRow(r.id, { title: e.target.value })}
+                      />
+                    </label>
+                    <label className="field-label import-field-label">
+                      Type
+                      <select
+                        className="field"
+                        value={r.suggestedType}
+                        onChange={(e) => updateRow(r.id, { suggestedType: e.target.value as SuggestionType })}
+                      >
+                        {GROUP_ORDER.map((t) => (
+                          <option key={t} value={t}>
+                            {TYPE_LABELS[t]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field-label import-field-label">
+                      Amount
+                      <input
+                        className="field"
+                        placeholder="0.00"
+                        inputMode="decimal"
+                        value={r.amount != null ? (r.amount / 100).toString() : ''}
+                        onChange={(e) => updateRow(r.id, { amount: e.target.value.trim() ? parseCents(e.target.value) : null })}
+                      />
+                    </label>
+                    <label className="field-label import-field-label">
+                      Date
+                      <input
+                        className="field"
+                        type="date"
+                        value={r.date ?? ''}
+                        onChange={(e) => updateRow(r.id, { date: e.target.value || null })}
+                      />
+                    </label>
                     <div className="import-meta">
                       <span className={`confidence confidence-${r.confidence}`}>{r.confidence} confidence</span>
                       {!acceptable && <span className="form-error">Needs a date to save</span>}
@@ -198,13 +214,19 @@ export default function ImportPage() {
         </div>
       ))}
 
-      <div className="card form-actions">
-        <button type="button" className="secondary-button" onClick={() => setRows(null)}>
-          Cancel
-        </button>
-        <button type="button" disabled={acceptedCount === 0} onClick={saveSelected}>
-          Save {acceptedCount} selected
-        </button>
+      <div className="card import-review-footer">
+        <div>
+          <strong>{acceptedCount} selected</strong>
+          <p className="field-help">{needsReviewCount} row{needsReviewCount === 1 ? '' : 's'} need review.</p>
+        </div>
+        <div className="form-actions">
+          <button type="button" className="secondary-button" onClick={() => setRows(null)}>
+            Cancel
+          </button>
+          <button type="button" disabled={acceptedCount === 0} onClick={saveSelected}>
+            Save selected
+          </button>
+        </div>
       </div>
     </div>
   )

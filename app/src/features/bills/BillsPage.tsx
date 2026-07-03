@@ -191,30 +191,39 @@ export default function BillsPage() {
       {showForm && (
         <form className="card quick-add" onSubmit={submit}>
           <strong>{form.id ? 'Edit bill' : 'Add bill'}</strong>
-          <input
-            className="field"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          />
-          <select
-            className="field"
-            value={form.category}
-            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as BillCategory }))}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORY_LABELS[c]}
-              </option>
-            ))}
-          </select>
-          <input
-            className="field"
-            placeholder="Expected amount, e.g. 45.00"
-            inputMode="decimal"
-            value={form.amount}
-            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-          />
+          <label className="field-label">
+            Bill name
+            <input
+              className="field"
+              placeholder="Example: Netflix"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+          </label>
+          <label className="field-label">
+            Category
+            <select
+              className="field"
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as BillCategory }))}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-label">
+            Expected amount
+            <input
+              className="field"
+              placeholder="45.00"
+              inputMode="decimal"
+              value={form.amount}
+              onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+            />
+          </label>
 
           <div className="radio-row">
             {(Object.keys(KIND_LABELS) as RecurrenceKind[]).map((kind) => (
@@ -226,52 +235,69 @@ export default function BillsPage() {
           </div>
 
           {form.kind === 'monthly' && (
-            <input
-              className="field"
-              type="number"
-              min={1}
-              max={31}
-              placeholder="Day of month"
-              value={form.dayOfMonth}
-              onChange={(e) => setForm((f) => ({ ...f, dayOfMonth: e.target.value }))}
-            />
-          )}
-          {(form.kind === 'weekly' || form.kind === 'biweekly') && (
-            <input
-              className="field"
-              type="date"
-              value={form.anchorDate}
-              onChange={(e) => setForm((f) => ({ ...f, anchorDate: e.target.value }))}
-            />
-          )}
-          {form.kind === 'custom_days' && (
-            <>
+            <label className="field-label">
+              Day of month
               <input
                 className="field"
                 type="number"
                 min={1}
-                placeholder="Every N days"
-                value={form.intervalDays}
-                onChange={(e) => setForm((f) => ({ ...f, intervalDays: e.target.value }))}
+                max={31}
+                placeholder="1"
+                value={form.dayOfMonth}
+                onChange={(e) => setForm((f) => ({ ...f, dayOfMonth: e.target.value }))}
               />
+            </label>
+          )}
+          {(form.kind === 'weekly' || form.kind === 'biweekly') && (
+            <label className="field-label">
+              Start date
               <input
                 className="field"
                 type="date"
                 value={form.anchorDate}
                 onChange={(e) => setForm((f) => ({ ...f, anchorDate: e.target.value }))}
               />
+            </label>
+          )}
+          {form.kind === 'custom_days' && (
+            <>
+              <label className="field-label">
+                Repeat every
+                <input
+                  className="field"
+                  type="number"
+                  min={1}
+                  placeholder="30"
+                  value={form.intervalDays}
+                  onChange={(e) => setForm((f) => ({ ...f, intervalDays: e.target.value }))}
+                />
+              </label>
+              <label className="field-label">
+                Start date
+                <input
+                  className="field"
+                  type="date"
+                  value={form.anchorDate}
+                  onChange={(e) => setForm((f) => ({ ...f, anchorDate: e.target.value }))}
+                />
+              </label>
             </>
           )}
           {form.kind === 'once' && (
-            <input
-              className="field"
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-            />
+            <label className="field-label">
+              Due date
+              <input
+                className="field"
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+              />
+            </label>
           )}
 
-          {error && <p className="form-error">{error}</p>}
+          <div className="sr-status" aria-live="polite">
+            {error && <p className="form-error">{error}</p>}
+          </div>
           <div className="form-actions">
             <button type="button" className="secondary-button" onClick={() => setShowForm(false)}>
               Cancel

@@ -89,26 +89,37 @@ export default function TodayPage() {
 
       <form className="card quick-add" onSubmit={submitQuickAdd}>
         <strong>Quick add</strong>
-        <input
-          className="field"
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-        />
-        <input
-          className="field"
-          placeholder="Amount, e.g. 45.00"
-          inputMode="decimal"
-          value={form.amount}
-          onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-        />
-        <input
-          className="field"
-          type="date"
-          value={form.dueDate}
-          onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-        />
-        {formError && <p className="form-error">{formError}</p>}
+        <label className="field-label">
+          Bill title
+          <input
+            className="field"
+            placeholder="Example: TEP"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+          />
+        </label>
+        <label className="field-label">
+          Amount
+          <input
+            className="field"
+            placeholder="45.00"
+            inputMode="decimal"
+            value={form.amount}
+            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+          />
+        </label>
+        <label className="field-label">
+          Due date
+          <input
+            className="field"
+            type="date"
+            value={form.dueDate}
+            onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+          />
+        </label>
+        <div className="sr-status" aria-live="polite">
+          {formError && <p className="form-error">{formError}</p>}
+        </div>
         <button type="submit">Add</button>
       </form>
     </div>

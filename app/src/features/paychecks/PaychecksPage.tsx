@@ -13,6 +13,7 @@ export default function PaychecksPage() {
   const savedGoal = snapshot.data.goals.find((g) => g.status === 'active')
   const [goal, setGoal] = useState(savedGoal ? (savedGoal.targetAmount / 100).toString() : '')
   const [goalName, setGoalName] = useState(savedGoal?.name ?? 'Vacation')
+  const [goalMessage, setGoalMessage] = useState<string | null>(null)
   const todayIso = iso(new Date())
   const goalAmount = goal.trim() ? parseCents(goal) : null
   const projection = buildProjection({
@@ -53,19 +54,25 @@ export default function PaychecksPage() {
           </div>
         </div>
         <div className="goal-row">
-          <input
-            className="field"
-            placeholder="Goal name"
-            value={goalName}
-            onChange={(e) => setGoalName(e.target.value)}
-          />
-          <input
-            className="field"
-            inputMode="decimal"
-            placeholder="Vacation goal, e.g. 1200"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-          />
+          <label className="field-label">
+            Goal name
+            <input
+              className="field"
+              placeholder="Vacation"
+              value={goalName}
+              onChange={(e) => setGoalName(e.target.value)}
+            />
+          </label>
+          <label className="field-label">
+            Target amount
+            <input
+              className="field"
+              inputMode="decimal"
+              placeholder="1200"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+            />
+          </label>
           <div className="goal-answer">
             <span className="label">Paychecks</span>
             <span className="value">{goalAmount && goalAmount > 0 ? (projection.paychecksToGoal ?? 'Not in horizon') : '—'}</span>
@@ -77,10 +84,14 @@ export default function PaychecksPage() {
             onClick={() => {
               if (!goalAmount || goalAmount <= 0) return
               saveGoal({ id: savedGoal?.id, name: goalName.trim(), targetAmount: goalAmount })
+              setGoalMessage('Goal saved.')
             }}
           >
             Save goal
           </button>
+        </div>
+        <div className="sr-status" aria-live="polite">
+          {goalMessage && <p className="field-help">{goalMessage}</p>}
         </div>
       </section>
 

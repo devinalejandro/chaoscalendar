@@ -129,7 +129,9 @@ export default function AdminPage() {
             Pull snapshot
           </button>
         </div>
-        {syncMessage && <p className="form-error settings-message">{syncMessage}</p>}
+        <div className="sr-status" aria-live="polite">
+          {syncMessage && <p className="form-error settings-message">{syncMessage}</p>}
+        </div>
       </section>
 
       <section className="card">

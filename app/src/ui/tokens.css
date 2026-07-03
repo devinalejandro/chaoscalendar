@@ -1,40 +1,114 @@
-/* Aurora design tokens — extracted from the live prototype (index.html).
-   Palette, radii, and shadows must stay visually identical to the soft
-   vintage theme. */
-:root {
-  /* palette */
+/* Semantic design tokens for the warm vintage finance UI.
+   Decorative Aurora tokens are aliases only; new UI should use semantic roles. */
+:root,
+.theme-romantic-light {
+  --app-bg: linear-gradient(150deg, #fff8f6 0%, #f8ece9 44%, #efe2f0 100%);
+  --page-bg: #fff8f6;
+  --surface: #ffffff;
+  --surface-muted: #fff3f0;
+  --surface-raised: rgba(255, 255, 255, 0.84);
+  --border-subtle: #f1dfe4;
+  --border-strong: #d6a7b4;
+  --text-primary: #37292b;
+  --text-secondary: #66504c;
+  --text-muted: #836b63;
+  --text-inverse: #ffffff;
+  --accent-primary: #b75f7d;
+  --accent-primary-hover: #9f4e6a;
+  --accent-soft: rgba(183, 95, 125, 0.12);
+  --success: #607d4f;
+  --success-soft: rgba(96, 125, 79, 0.15);
+  --warning: #9f6b1f;
+  --warning-soft: rgba(159, 107, 31, 0.14);
+  --danger: #a94646;
+  --danger-soft: rgba(169, 70, 70, 0.14);
+  --info: #526b94;
+  --info-soft: rgba(82, 107, 148, 0.14);
+  --focus-ring: #6d5df2;
+  --accent-gradient: linear-gradient(135deg, #eeb5c3, #c97790);
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-soft: 0 4px 14px rgba(113, 68, 82, 0.1);
+  --shadow-raised: 0 12px 28px rgba(113, 68, 82, 0.2);
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --touch-target: 44px;
+
+  /* Compatibility aliases for existing code. */
   --aurora-pink: #f1b9c7;
   --aurora-rose: #d98ca0;
-  --aurora-accent: #c97c93;
-  --aurora-ink: #4a3436;
-  --aurora-ink-soft: #7c6460;
-  --aurora-muted: #9c7f76;
-  --aurora-danger: #c0605a;
-  --aurora-danger-bg: #fbe4e4;
-  --aurora-success: #8ca679;
-  --aurora-card: #ffffff;
-  --aurora-line: #f5e7ea;
+  --aurora-accent: var(--accent-primary);
+  --aurora-ink: var(--text-primary);
+  --aurora-ink-soft: var(--text-secondary);
+  --aurora-muted: var(--text-muted);
+  --aurora-danger: var(--danger);
+  --aurora-danger-bg: var(--danger-soft);
+  --aurora-success: var(--success);
+  --aurora-card: var(--surface);
+  --aurora-line: var(--border-subtle);
   --aurora-bg-0: #fff8f6;
   --aurora-bg-1: #f8ece9;
   --aurora-bg-2: #efe2f0;
+  --aurora-hero: var(--accent-gradient);
+  --aurora-bg: var(--app-bg);
+  --aurora-paper: var(--surface-muted);
+  --shadow-card: var(--shadow-soft);
+  --shadow-float: var(--shadow-raised);
+}
 
-  /* gradients */
-  --aurora-hero: linear-gradient(135deg, var(--aurora-pink), var(--aurora-rose));
-  --aurora-bg: linear-gradient(150deg, var(--aurora-bg-0) 0%, var(--aurora-bg-1) 44%, var(--aurora-bg-2) 100%);
+.theme-vintage-dark {
+  color-scheme: dark;
+  --app-bg: #241b1d;
+  --page-bg: #241b1d;
+  --surface: #302629;
+  --surface-muted: #3a2d31;
+  --surface-raised: #382b2f;
+  --border-subtle: #594449;
+  --border-strong: #8d6a73;
+  --text-primary: #fff4ef;
+  --text-secondary: #e1c8c1;
+  --text-muted: #b99d96;
+  --text-inverse: #241b1d;
+  --accent-primary: #ef9fb6;
+  --accent-primary-hover: #ffb5c8;
+  --accent-soft: rgba(239, 159, 182, 0.16);
+  --success: #abc391;
+  --success-soft: rgba(171, 195, 145, 0.16);
+  --warning: #e4b466;
+  --warning-soft: rgba(228, 180, 102, 0.16);
+  --danger: #ee9690;
+  --danger-soft: rgba(238, 150, 144, 0.16);
+  --info: #aebce0;
+  --info-soft: rgba(174, 188, 224, 0.16);
+  --focus-ring: #b9b0ff;
+  --accent-gradient: linear-gradient(135deg, #9b5870, #6e3d51);
+}
 
-  /* radii */
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 18px;
-  --radius-xl: 28px;
-
-  /* shadows */
-  --shadow-card: 0 4px 14px rgba(201, 124, 144, 0.1);
-  --shadow-float: 0 12px 28px rgba(201, 124, 144, 0.28);
-
-  /* type */
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-
-  /* touch */
-  --touch-target: 44px;
+.theme-neutral-ledger {
+  --app-bg: #f6f4ef;
+  --page-bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-muted: #ece8df;
+  --surface-raised: #ffffff;
+  --border-subtle: #ddd6c9;
+  --border-strong: #b7aa99;
+  --text-primary: #272522;
+  --text-secondary: #5c554c;
+  --text-muted: #756b60;
+  --text-inverse: #ffffff;
+  --accent-primary: #6e6256;
+  --accent-primary-hover: #51483f;
+  --accent-soft: rgba(110, 98, 86, 0.12);
+  --success: #50764e;
+  --success-soft: rgba(80, 118, 78, 0.14);
+  --warning: #8b651e;
+  --warning-soft: rgba(139, 101, 30, 0.14);
+  --danger: #9b4545;
+  --danger-soft: rgba(155, 69, 69, 0.14);
+  --info: #4b6388;
+  --info-soft: rgba(75, 99, 136, 0.14);
+  --focus-ring: #4f63d8;
+  --accent-gradient: linear-gradient(135deg, #8f8276, #655a50);
 }

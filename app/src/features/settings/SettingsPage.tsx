@@ -46,13 +46,16 @@ export default function SettingsPage() {
         <button type="button" onClick={exportSnapshot}>
           Export backup
         </button>
-        <textarea
-          className="field textarea"
-          rows={8}
-          placeholder="Paste a Chaos Calendar backup JSON"
-          value={restoreText}
-          onChange={(e) => setRestoreText(e.target.value)}
-        />
+        <label className="field-label">
+          Backup JSON
+          <textarea
+            className="field textarea"
+            rows={8}
+            placeholder="Paste a Chaos Calendar backup JSON"
+            value={restoreText}
+            onChange={(e) => setRestoreText(e.target.value)}
+          />
+        </label>
         <button type="button" className="secondary-button" disabled={!restoreText.trim()} onClick={restoreSnapshot}>
           Restore backup
         </button>
@@ -67,7 +70,9 @@ export default function SettingsPage() {
         >
           Undo last restore
         </button>
-        {message && <p className="form-error settings-message">{message}</p>}
+        <div className="sr-status" aria-live="polite">
+          {message && <p className="form-error settings-message">{message}</p>}
+        </div>
       </section>
 
       <section className="card">
