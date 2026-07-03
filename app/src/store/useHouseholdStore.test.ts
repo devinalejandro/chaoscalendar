@@ -324,4 +324,18 @@ describe('createHouseholdStore — applyImport', () => {
     const created = store.getState().snapshot.data.paychecks.find((p) => p.id === 'pc_2026-09-02')!
     expect(created.amount).toBe(existingAmount)
   })
+
+  it('does not stretch an existing paycheck window when a partial PAYDAYS header is imported', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const before = store.getState().snapshot.data.paychecks.find((p) => p.id === 'pc_2026-07-01')!
+    expect(before).toMatchObject({ periodStart: '2026-07-01', periodEnd: '2026-07-14' })
+
+    store.getState().applyImport([
+      { type: 'paycheck', title: 'Paycheck', amount: 189348, date: '2026-07-01', paid: false },
+      { type: 'paycheck', title: 'Paycheck', amount: 189348, date: '2026-07-29', paid: false },
+    ])
+
+    const after = store.getState().snapshot.data.paychecks.find((p) => p.id === 'pc_2026-07-01')!
+    expect(after).toMatchObject({ periodStart: '2026-07-01', periodEnd: '2026-07-14' })
+  })
 })

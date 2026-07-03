@@ -217,7 +217,8 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
             householdId,
           )
           generated.forEach((pc) => {
-            next = upsertPaycheck(next, pc)
+            const existing = next.data.paychecks.find((p) => p.id === pc.id)
+            next = upsertPaycheck(next, existing ? { ...existing, amount: pc.amount, payDate: pc.payDate } : pc)
           })
         }
 
