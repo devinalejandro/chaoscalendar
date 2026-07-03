@@ -7,6 +7,7 @@ import ImportPage from './features/import/ImportPage'
 import MigrationPage from './features/migration/MigrationPage'
 import AuthStatus from './features/auth/AuthStatus'
 import SettingsPage from './features/settings/SettingsPage'
+import AdminPage from './features/admin/AdminPage'
 
 const TABS = [
   { to: '/today', label: 'Today' },
@@ -30,6 +31,9 @@ export default function App() {
         <Link to="/settings" className="import-entry import-entry-secondary">
           Settings
         </Link>
+        <Link to="/admin" className="import-entry import-entry-secondary">
+          Admin
+        </Link>
         <AuthStatus />
       </header>
 
@@ -42,6 +46,7 @@ export default function App() {
         <Route path="/import" element={<ImportPage />} />
         <Route path="/migration" element={<MigrationPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
 
       <nav className="tabbar" aria-label="Main">

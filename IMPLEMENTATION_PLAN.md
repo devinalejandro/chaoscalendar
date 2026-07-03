@@ -408,6 +408,24 @@ Restore now keeps a one-step undo snapshot, exposed through Settings, so a
 valid-but-wrong backup can be reversed immediately. 115/115 tests pass,
 `tsc -b`, `vite build`, and lint are clean.
 
+| M11 | Admin + production cutover tools | Admin panel proves cutover readiness without launching automatically |
+
+**M11 status (2026-07-03):** Admin health panel landed at `/admin`. It reports
+household presence, finance data counts, snapshot schema, Supabase env status,
+legacy archive availability, and PWA/service-worker availability, with a single
+cutover-ready/review-first badge. It also links directly to backups,
+migration, and `/legacy` so the launch path can be checked from one place.
+
+| M12 | Launch hardening + PWA readiness | App has real browser/PWA metadata and a launch checklist |
+
+**M12 status (2026-07-03):** Browser/PWA shell hardened. The Vite default title
+is replaced with `Karla's Chaos Calendar`; manifest, theme color, and service
+worker registration are in place; Netlify CSP now allows the future Supabase
+connection; and `LAUNCH_CHECKLIST.md` captures the production gates for push,
+Netlify build, `/admin`, `/legacy`, `/migration`, backup export, and phone PWA
+verification. 117/117 tests pass, `tsc -b`, `vite build`, lint, and
+`netlify build` are clean.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

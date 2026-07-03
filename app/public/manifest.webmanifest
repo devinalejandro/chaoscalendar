@@ -1,0 +1,18 @@
+{
+  "name": "Karla's Chaos Calendar",
+  "short_name": "Chaos Calendar",
+  "description": "Private household bills, paychecks, goals, and calendar planning.",
+  "start_url": "/today",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F4",
+  "theme_color": "#C97C93",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
