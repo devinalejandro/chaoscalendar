@@ -334,6 +334,14 @@ lint all clean. Not done: ImportBatch/ImportSuggestion audit-log persistence
 file/.txt upload (paste-only for now, matching the PRD's MVP note).
 
 | M5 | Prediction calculator + Calendar tab | Projections match hand-computed fixtures; goal/vacation planners answer PRD examples |
+
+**M5 status (2026-07-02):** Prediction engine and Calendar tab landed.
+`lib/predict.ts` computes next-4/next-8/average leftover and paychecks-to-goal
+from upcoming paycheck windows; fixtures cover hand-computed projection cases.
+Paychecks now shows the prediction card with vacation-goal input. Calendar now
+renders a month grid with payday/bill dots, selected-day paycheck rows, and
+bill paid toggles. 100/100 tests pass, `tsc -b`, `vite build`, and lint all
+clean.
 | M6 | Migration + cutover: legacy export button, importer + review, Supabase Auth replaces password gate, old app archived at `/legacy/` | Live household data migrated with review; success criteria in PRD §Success all pass |
 
 The deployed prototype stays live and untouched until M6; all new work ships

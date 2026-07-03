@@ -502,3 +502,169 @@ button {
   text-align: center;
   text-decoration: none;
 }
+
+/* prediction */
+.prediction-card .placeholder {
+  text-align: left;
+}
+
+.spark {
+  color: var(--aurora-accent);
+  font-weight: 800;
+}
+
+.prediction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.prediction-grid > div,
+.goal-answer {
+  background: var(--aurora-paper);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.prediction-grid .label,
+.goal-answer .label {
+  display: block;
+  font-size: 11px;
+  color: var(--aurora-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.prediction-grid .value,
+.goal-answer .value {
+  display: block;
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.goal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 136px;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* calendar */
+.calendar-header {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.compact-button {
+  min-width: var(--touch-target);
+  padding: 0;
+  font-size: 22px;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekdays {
+  margin-top: 14px;
+  color: var(--aurora-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-grid {
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.calendar-cell {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--aurora-paper);
+  color: var(--aurora-ink);
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.calendar-cell.blank {
+  background: transparent;
+  cursor: default;
+}
+
+.calendar-cell.today {
+  color: var(--aurora-accent);
+  border-color: var(--aurora-line);
+}
+
+.calendar-cell.selected {
+  background: var(--aurora-hero);
+  color: #fff;
+}
+
+.calendar-dots,
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.calendar-legend {
+  margin-top: 12px;
+  color: var(--aurora-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.paycheck-dot {
+  background: var(--aurora-success);
+}
+
+.bill-dot {
+  background: var(--aurora-accent);
+}
+
+.calendar-paychecks {
+  margin-top: 12px;
+}
+
+.calendar-paycheck-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--aurora-line);
+}
+
+@media (max-width: 480px) {
+  .prediction-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-row {
+    grid-template-columns: 1fr;
+  }
+}
