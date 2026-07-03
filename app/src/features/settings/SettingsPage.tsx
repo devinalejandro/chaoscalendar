@@ -27,6 +27,9 @@ export default function SettingsPage() {
   function restoreSnapshot() {
     try {
       const parsed = Snapshot.parse(JSON.parse(restoreText))
+      if (!window.confirm('This replaces everything currently in the app with this backup. You can undo this once with "Undo last restore" below. Continue?')) {
+        return
+      }
       replaceSnapshot({ ...parsed, updatedAt: new Date().toISOString() })
       setRestoreText('')
       setMessage('Backup restored.')

@@ -6,8 +6,21 @@ export interface SyncRequest {
   init: RequestInit
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * `cloud_snapshots.household_id` is a Postgres `uuid` column (see
+ * supabase/migrations/202607030001_m13_cloud_snapshots.sql), but every
+ * locally-generated household id is a prefixed string (`hh_karla`,
+ * `hh_local`, `hh_legacy`, ...) — never a real UUID. Sending one to
+ * Supabase fails at the database layer before RLS is even evaluated.
+ * Reporting sync as "Ready" for a non-UUID household id is misleading:
+ * push/pull cannot succeed no matter how the rest of cloud sync is
+ * configured, so gate on the id shape here rather than only its presence.
+ */
 export function canSyncSnapshot(snapshot: Snapshot, config: SupabaseConfig | null): boolean {
-  return Boolean(config && snapshot.data.household?.id)
+  const householdId = snapshot.data.household?.id
+  return Boolean(config && householdId && UUID_RE.test(householdId))
 }
 
 export function buildSnapshotUpsertRequest(config: SupabaseConfig, snapshot: Snapshot): SyncRequest {

@@ -7,6 +7,7 @@ import { materializeAll } from '../lib/billInstances'
 
 const STORAGE_KEY = 'aurora.snapshot'
 const QUARANTINE_PREFIX = 'aurora.corrupt.'
+const LAST_REPLACED_KEY = 'aurora.lastReplaced'
 
 export interface LoadOutcome {
   snapshot: Snapshot
@@ -54,6 +55,33 @@ function quarantine(storage: KeyValueStorage, raw: unknown, nowIso: string, erro
 export function saveSnapshot(storage: KeyValueStorage, snapshot: Snapshot): void {
   const validated = SnapshotSchema.parse(snapshot) // throws on a programmer error, never during load
   storage.setItem(STORAGE_KEY, JSON.stringify(validated))
+}
+
+/**
+ * Backup of the snapshot a destructive replaceSnapshot() call is about to
+ * overwrite. Written to storage (not just in-memory state) so the one-step
+ * undo survives a page reload — replaceSnapshot is called from Migration,
+ * Admin "Pull snapshot", and Settings "Restore backup", all of which can
+ * otherwise silently discard real household data with no way back once the
+ * tab closes.
+ */
+export function saveLastReplacedSnapshot(storage: KeyValueStorage, snapshot: Snapshot | null): void {
+  if (snapshot === null) {
+    storage.removeItem(LAST_REPLACED_KEY)
+    return
+  }
+  storage.setItem(LAST_REPLACED_KEY, JSON.stringify(snapshot))
+}
+
+export function loadLastReplacedSnapshot(storage: KeyValueStorage): Snapshot | null {
+  const raw = storage.getItem(LAST_REPLACED_KEY)
+  if (raw === null) return null
+  try {
+    const parsed = SnapshotSchema.safeParse(JSON.parse(raw))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
 }
 
 /* ---- pure snapshot-mutation helpers (service layer) ----

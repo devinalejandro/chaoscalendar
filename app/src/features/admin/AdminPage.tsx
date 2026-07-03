@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useHouseholdStore } from '../../store/useHouseholdStore'
 import { buildAdminHealthReport, type HealthStatus } from '../../lib/adminHealth'
@@ -16,13 +16,31 @@ export default function AdminPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
   const replaceSnapshot = useHouseholdStore((s) => s.replaceSnapshot)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  // null until the reachability check below resolves — the health report
+  // treats null as "not yet verified" rather than a false "pass".
+  const [legacyReachable, setLegacyReachable] = useState<boolean | null>(null)
   const supabaseConfig = getSupabaseConfig()
   const syncReady = canSyncSnapshot(snapshot, supabaseConfig)
   const auditEvents = recentAuditEvents(snapshot, 8)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/legacy', { method: 'HEAD' })
+      .then((res) => {
+        if (!cancelled) setLegacyReachable(res.ok)
+      })
+      .catch(() => {
+        if (!cancelled) setLegacyReachable(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const report = buildAdminHealthReport({
     snapshot,
     supabaseConfigured: isSupabaseConfigured(),
-    hasLegacyArchive: true,
+    hasLegacyArchive: legacyReachable,
     hasServiceWorker: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
   })
 
@@ -73,7 +91,9 @@ export default function AdminPage() {
         <p className="placeholder placeholder-tight">
           {syncReady
             ? 'Snapshot sync can use the Supabase cloud_snapshots table.'
-            : 'Set Supabase env and keep a household record before enabling cloud sync.'}
+            : supabaseConfig && snapshot.data.household?.id
+              ? 'This household’s id is not a Supabase-compatible UUID yet, so push/pull cannot succeed even though Supabase env is configured.'
+              : 'Set Supabase env and keep a household record before enabling cloud sync.'}
         </p>
         <div className="form-actions admin-actions">
           <button
@@ -94,6 +114,9 @@ export default function AdminPage() {
             disabled={!syncReady || !supabaseConfig || !snapshot.data.household?.id}
             onClick={async () => {
               if (!supabaseConfig || !snapshot.data.household?.id) return
+              if (!window.confirm('This replaces everything currently in the app with the cloud snapshot. You can undo this once from Settings > Undo last restore. Continue?')) {
+                return
+              }
               const result = await pullSnapshotFromSupabase(supabaseConfig, snapshot.data.household.id)
               if (result.ok) {
                 replaceSnapshot(result.snapshot)

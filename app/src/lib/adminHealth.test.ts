@@ -29,4 +29,19 @@ describe('buildAdminHealthReport', () => {
     expect(report.checks.find((check) => check.id === 'legacy')?.status).toBe('fail')
     expect(report.checks.find((check) => check.id === 'supabase')?.status).toBe('warn')
   })
+
+  it('treats an unresolved legacy-archive check as "warn", not a false pass', () => {
+    const report = buildAdminHealthReport({
+      snapshot: seedHousehold('2026-07-02T00:00:00.000Z'),
+      supabaseConfigured: true,
+      hasLegacyArchive: null,
+      hasServiceWorker: true,
+    })
+
+    const legacyCheck = report.checks.find((check) => check.id === 'legacy')!
+    expect(legacyCheck.status).toBe('warn')
+    expect(legacyCheck.detail).toMatch(/checking/i)
+    // an in-flight check should not block cutover readiness by itself
+    expect(report.readyForCutover).toBe(true)
+  })
 })

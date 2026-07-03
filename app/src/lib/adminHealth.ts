@@ -22,7 +22,9 @@ export function buildAdminHealthReport({
 }: {
   snapshot: Snapshot
   supabaseConfigured: boolean
-  hasLegacyArchive: boolean
+  /** null while the /legacy reachability check is still in flight — not
+      yet verified, so it must not report "pass". */
+  hasLegacyArchive: boolean | null
   hasServiceWorker: boolean
 }): AdminHealthReport {
   const checks: HealthCheck[] = [
@@ -53,8 +55,13 @@ export function buildAdminHealthReport({
     {
       id: 'legacy',
       label: 'Legacy archive',
-      status: hasLegacyArchive ? 'pass' : 'fail',
-      detail: hasLegacyArchive ? 'Legacy app is available at /legacy.' : 'Legacy archive route is missing.',
+      status: hasLegacyArchive === null ? 'warn' : hasLegacyArchive ? 'pass' : 'fail',
+      detail:
+        hasLegacyArchive === null
+          ? 'Checking whether /legacy responds…'
+          : hasLegacyArchive
+            ? 'Legacy app is available at /legacy.'
+            : '/legacy did not respond — the archive route may be missing or broken.',
     },
     {
       id: 'pwa',

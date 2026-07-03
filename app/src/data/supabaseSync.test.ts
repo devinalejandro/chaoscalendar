@@ -12,10 +12,21 @@ import { createEmptySnapshot } from './migrate'
 const config = { url: 'https://example.supabase.co', anonKey: 'anon' }
 
 describe('Supabase snapshot sync boundary', () => {
-  it('requires both Supabase config and a household id', () => {
-    expect(canSyncSnapshot(seedHousehold('2026-07-03T00:00:00.000Z'), config)).toBe(true)
+  it('requires Supabase config and a household id, but a locally-generated id is never enough', () => {
+    // cloud_snapshots.household_id is a Postgres `uuid` column; seedHousehold's
+    // id ("hh_karla") is a prefixed string like every other local id, so it
+    // must NOT report sync as ready — push/pull would fail at the database
+    // layer regardless of RLS or Supabase env.
+    expect(canSyncSnapshot(seedHousehold('2026-07-03T00:00:00.000Z'), config)).toBe(false)
     expect(canSyncSnapshot(seedHousehold('2026-07-03T00:00:00.000Z'), null)).toBe(false)
     expect(canSyncSnapshot(createEmptySnapshot('dev', '2026-07-03T00:00:00.000Z'), config)).toBe(false)
+  })
+
+  it('is ready only once the household id is a real UUID', () => {
+    const snapshot = seedHousehold('2026-07-03T00:00:00.000Z')
+    const withUuid = { ...snapshot, data: { ...snapshot.data, household: { ...snapshot.data.household!, id: '3fa85f64-5717-4562-b3fc-2c963f66afa6' } } }
+    expect(canSyncSnapshot(withUuid, config)).toBe(true)
+    expect(canSyncSnapshot(withUuid, null)).toBe(false)
   })
 
   it('builds an upsert request for the cloud_snapshots table', () => {

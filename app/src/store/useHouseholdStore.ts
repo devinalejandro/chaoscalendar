@@ -3,9 +3,11 @@ import type { Bill, BillCategory, BillInstance, Snapshot } from '../types'
 import { createMemoryStorage, getBrowserStorage, type KeyValueStorage } from '../data/storage'
 import {
   loadHouseholdSnapshot,
+  loadLastReplacedSnapshot,
   markInstancePaid,
   regenerateInstances,
   resetFutureInstancesForBill,
+  saveLastReplacedSnapshot,
   saveSnapshot,
   unmarkInstancePaid,
   upsertBill,
@@ -18,7 +20,7 @@ import { seedHousehold } from '../data/seed'
 import { newId } from '../lib/id'
 import { addMonths, iso } from '../lib/dates'
 import { buildRecurrenceRule, type RecurrenceInput } from '../lib/recurrence'
-import { dayOfMonth, findMatchingBillTemplate, inferBillCategory } from '../lib/billLearning'
+import { findMatchingBillTemplate } from '../lib/billLearning'
 import { appendAuditEvent } from '../lib/audit'
 
 const DEVICE_ID_KEY = 'aurora.deviceId'
@@ -95,6 +97,12 @@ export interface HouseholdState {
       re-running an import isn't destructive or duplicative. */
   applyImport: (items: AcceptedImportItem[]) => void
   saveGoal: (input: { id?: string; name: string; targetAmount: number; targetDate?: string; currentAmount?: number }) => void
+  /** Wholesale-replaces the household (Migration "Save migrated data",
+      Admin "Pull snapshot", Settings "Restore backup"). The snapshot being
+      overwritten is saved to storage first — not just in-memory state — so
+      undoReplaceSnapshot() survives a page reload. Callers should still
+      confirm with the user before calling this; it has no confirmation of
+      its own. */
   replaceSnapshot: (snapshot: Snapshot) => void
   undoReplaceSnapshot: () => void
 }
@@ -117,6 +125,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
     initialSnapshot = seedHousehold(nowIso)
     saveSnapshot(storage, initialSnapshot)
   }
+  const initialLastReplaced = loadLastReplacedSnapshot(storage)
 
   return create<HouseholdState>((set, get) => {
     const persist = (next: Snapshot) => {
@@ -132,7 +141,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
 
     return {
       snapshot: initialSnapshot,
-      lastReplacedSnapshot: null,
+      lastReplacedSnapshot: initialLastReplaced,
       quarantined: loaded.quarantined,
       markPaid: (instanceId, paidDate) => {
         const before = get().snapshot.data.billInstances.find((i) => i.id === instanceId)
@@ -245,31 +254,27 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
 
         const billLike = items.filter((i) => i.type === 'bill' || i.type === 'appointment')
         const newInstances: BillInstance[] = []
+        const updatedBillIds = new Set<string>()
         billLike.forEach((i) => {
           let billId: string | undefined
+          // Only reconcile against a bill template the user already set up
+          // (e.g. in the Bills tab) — never fabricate a new recurring
+          // monthly template from an import line. A pasted paycheck note
+          // has no way to say "this repeats"; assuming every dollar amount
+          // next to a date is a permanent monthly charge silently corrupts
+          // every future budget/prediction total for what may well have
+          // been a one-time bill. If the user wants recurrence, they add it
+          // explicitly on the Bills tab (saveBill), which then becomes the
+          // matchable template the next import reconciles against.
           if (i.type === 'bill' && i.amount != null) {
             const matchedBill = findMatchingBillTemplate(next.data.bills, i.title)
-            billId = matchedBill?.id ?? newId('bill')
-            const ruleId = matchedBill?.recurrenceRuleId ?? newId('rr')
-            const dueDay = dayOfMonth(i.date)
-            next = upsertRecurrenceRule(next, {
-              id: ruleId,
-              householdId,
-              frequency: 'monthly',
-              dayOfMonth: dueDay,
-            })
-            next = upsertBill(next, {
-              id: billId,
-              householdId,
-              name: matchedBill?.name ?? i.title,
-              category: matchedBill?.category ?? inferBillCategory(i.title),
-              expectedAmount: i.amount,
-              dueDay,
-              recurrenceRuleId: ruleId,
-              isFixed: true,
-              active: matchedBill?.active ?? true,
-              notes: matchedBill?.notes,
-            })
+            if (matchedBill) {
+              billId = matchedBill.id
+              if (matchedBill.expectedAmount !== i.amount) {
+                next = upsertBill(next, { ...matchedBill, expectedAmount: i.amount })
+                updatedBillIds.add(matchedBill.id)
+              }
+            }
           }
 
           const match = next.data.billInstances.find(
@@ -304,7 +309,14 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           next = { ...next, data: { ...next.data, billInstances } }
         }
 
-        if (billLike.some((i) => i.type === 'bill' && i.amount != null)) {
+        if (updatedBillIds.size) {
+          // A matched template's amount changed — discard its stale future
+          // instances so the new amount actually reaches Today/Paychecks
+          // (same reasoning as saveBill's resetFutureInstancesForBill call).
+          const today = iso(new Date())
+          updatedBillIds.forEach((id) => {
+            next = resetFutureInstancesForBill(next, id, today)
+          })
           const { from, to } = defaultHorizon(next)
           next = regenerateInstances(next, from, to)
         }
@@ -328,7 +340,9 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         persistAudited(upsertGoal(snapshot, goal), { action: input.id ? 'goal.update' : 'goal.create', entityType: 'goal', entityId: goalId, before, after: goal })
       },
       replaceSnapshot: (snapshot) => {
-        set({ lastReplacedSnapshot: get().snapshot })
+        const outgoing = get().snapshot
+        saveLastReplacedSnapshot(storage, outgoing)
+        set({ lastReplacedSnapshot: outgoing })
         persistAudited(snapshot, { action: 'snapshot.replace', entityType: 'snapshot', entityId: snapshot.data.household?.id ?? 'local', after: { schemaVersion: snapshot.schemaVersion } })
       },
       undoReplaceSnapshot: () => {
@@ -336,6 +350,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         if (!previous) return
         const next = appendAuditEvent(previous, { action: 'snapshot.restore_undo', entityType: 'snapshot', entityId: previous.data.household?.id ?? 'local' })
         saveSnapshot(storage, next)
+        saveLastReplacedSnapshot(storage, null)
         set({ snapshot: next, lastReplacedSnapshot: null })
       },
     }

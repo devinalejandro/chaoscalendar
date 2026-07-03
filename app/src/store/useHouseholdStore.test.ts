@@ -286,27 +286,47 @@ describe('createHouseholdStore — applyImport', () => {
     expect(netflix).toMatchObject({ status: 'paid', paidDate: '2026-06-07' })
   })
 
-  it('learns an accepted imported bill as a monthly bill template and generates future instances', () => {
+  it('does NOT fabricate a recurring monthly bill template for a title with no existing match', () => {
+    // A pasted note line has no way to say "this repeats" — creating a
+    // permanent monthly template from a single import line would silently
+    // turn a one-time bill (e.g. a car repair) into a phantom recurring
+    // charge that corrupts every future budget/prediction total. TEP has no
+    // existing template in this fresh household, so it must land as a
+    // plain, one-off, un-templated instance.
     const store = createHouseholdStore(createMemoryStorage())
 
     store.getState().applyImport([{ type: 'bill', title: 'TEP', amount: 15474, date: '2026-07-22', paid: false }])
 
-    const bill = store.getState().snapshot.data.bills.find((b) => b.name === 'TEP')!
-    expect(bill).toMatchObject({ expectedAmount: 15474, dueDay: 22, category: 'utilities', isFixed: true, active: true })
-    expect(bill.recurrenceRuleId).toBeTruthy()
-    const instances = store.getState().snapshot.data.billInstances.filter((i) => i.billId === bill.id)
-    expect(instances.some((i) => i.dueDate === '2026-07-22' && i.amount === 15474)).toBe(true)
-    expect(instances.some((i) => i.dueDate === '2026-08-22' && i.amount === 15474)).toBe(true)
+    expect(store.getState().snapshot.data.bills.some((b) => b.name === 'TEP')).toBe(false)
+    const instances = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'TEP')
+    expect(instances).toHaveLength(1)
+    expect(instances[0]).toMatchObject({ billId: undefined, dueDate: '2026-07-22', amount: 15474 })
   })
 
-  it('updates an existing learned template instead of creating a duplicate template', () => {
+  it('reconciles the amount onto an existing bill template instead of creating a duplicate or a new recurring one', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    // seeded household already has a monthly STRATA CC template at $45/day 10
+
+    store.getState().applyImport([{ type: 'bill', title: 'STRATA CC scheduled', amount: 4600, date: '2026-08-10', paid: false }])
+
+    const strataBills = store.getState().snapshot.data.bills.filter((b) => b.name === 'STRATA CC')
+    expect(strataBills).toHaveLength(1)
+    expect(strataBills[0]).toMatchObject({ expectedAmount: 4600 })
+    const instancesOnDate = store
+      .getState()
+      .snapshot.data.billInstances.filter((i) => i.billId === strataBills[0].id && i.dueDate === '2026-08-10')
+    expect(instancesOnDate).toHaveLength(1)
+    expect(instancesOnDate[0].amount).toBe(4600)
+  })
+
+  it('leaves an existing template unmodified when the imported amount matches, and does not duplicate its instance', () => {
     const store = createHouseholdStore(createMemoryStorage())
 
     store.getState().applyImport([{ type: 'bill', title: 'STRATA CC scheduled', amount: 4500, date: '2026-07-10', paid: false }])
 
     const strataBills = store.getState().snapshot.data.bills.filter((b) => b.name === 'STRATA CC')
     expect(strataBills).toHaveLength(1)
-    expect(strataBills[0]).toMatchObject({ expectedAmount: 4500, dueDay: 10 })
+    expect(strataBills[0]).toMatchObject({ expectedAmount: 4500 })
     const instancesOnDate = store
       .getState()
       .snapshot.data.billInstances.filter((i) => i.billId === strataBills[0].id && i.dueDate === '2026-07-10' && i.amount === 4500)
@@ -422,5 +442,22 @@ describe('createHouseholdStore recovery', () => {
     expect(store.getState().lastReplacedSnapshot).toBeNull()
     const reopened = createHouseholdStore(storage)
     expect(reopened.getState().snapshot.data.auditEvents[0]).toMatchObject({ action: 'snapshot.restore_undo' })
+  })
+
+  it('keeps the undo snapshot in storage, not just in-memory state, so it survives a reload', () => {
+    const storage = createMemoryStorage()
+    const store = createHouseholdStore(storage)
+    const original = store.getState().snapshot
+    const replacement = { ...original, updatedAt: '2026-07-02T00:00:00.000Z', data: { ...original.data, goals: [] } }
+
+    store.getState().replaceSnapshot(replacement)
+
+    // A fresh store instance over the same storage (simulating a page reload)
+    // must still be able to undo — this is what closes the "undo vanishes on
+    // refresh" data-loss gap.
+    const reopened = createHouseholdStore(storage)
+    expect(reopened.getState().lastReplacedSnapshot).toEqual(original)
+    reopened.getState().undoReplaceSnapshot()
+    expect(reopened.getState().snapshot.data.goals).toEqual(original.data.goals)
   })
 })

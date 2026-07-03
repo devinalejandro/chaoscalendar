@@ -36,6 +36,9 @@ export default function MigrationPage() {
 
   function saveMigration() {
     if (!preview) return
+    if (!window.confirm('This replaces everything currently in the app (bills, paychecks, goals, history) with the imported legacy data. You can undo this once from Settings > Undo last restore. Continue?')) {
+      return
+    }
     replaceSnapshot(preview.snapshot)
     setDone(true)
   }
