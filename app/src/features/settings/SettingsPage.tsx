@@ -6,6 +6,8 @@ import { Snapshot } from '../../types'
 export default function SettingsPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
   const replaceSnapshot = useHouseholdStore((s) => s.replaceSnapshot)
+  const undoReplaceSnapshot = useHouseholdStore((s) => s.undoReplaceSnapshot)
+  const canUndoRestore = useHouseholdStore((s) => s.lastReplacedSnapshot !== null)
   const [restoreText, setRestoreText] = useState('')
   const [message, setMessage] = useState<string | null>(null)
 
@@ -50,6 +52,17 @@ export default function SettingsPage() {
         />
         <button type="button" className="secondary-button" disabled={!restoreText.trim()} onClick={restoreSnapshot}>
           Restore backup
+        </button>
+        <button
+          type="button"
+          className="secondary-button"
+          disabled={!canUndoRestore}
+          onClick={() => {
+            undoReplaceSnapshot()
+            setMessage('Restore undone.')
+          }}
+        >
+          Undo last restore
         </button>
         {message && <p className="form-error settings-message">{message}</p>}
       </section>

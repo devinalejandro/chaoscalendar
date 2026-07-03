@@ -3,6 +3,7 @@ import { useHouseholdStore } from '../../store/useHouseholdStore'
 import { summarizeWindow } from '../../lib/windows'
 import { parseCents } from '../../lib/money'
 import { iso, isValidIso } from '../../lib/dates'
+import { buildReminderSummary } from '../../lib/reminders'
 import { WindowSummaryCard } from '../../ui/WindowSummaryCard'
 import { BillList } from '../../ui/BillList'
 
@@ -14,6 +15,7 @@ export default function TodayPage() {
   const todayIso = iso(new Date())
   const currentWindow = snapshot.data.paychecks.find((p) => todayIso >= p.periodStart && todayIso <= p.periodEnd)
   const summary = currentWindow ? summarizeWindow(currentWindow, snapshot.data.billInstances) : null
+  const reminders = buildReminderSummary(snapshot, todayIso)
 
   const dueSoon = snapshot.data.billInstances
     .filter((i) => i.status !== 'paid' && i.dueDate)
@@ -56,6 +58,33 @@ export default function TodayPage() {
       <div className="card">
         <strong>Due soon</strong>
         <BillList instances={dueSoon} onTogglePaid={setInstancePaid} emptyLabel="Nothing due — you're caught up." />
+      </div>
+
+      <div className="card reminders-card">
+        <strong>Reminders</strong>
+        <div className="settings-grid reminder-grid">
+          <div>
+            <span>Overdue</span>
+            <strong>{reminders.overdue.length}</strong>
+          </div>
+          <div>
+            <span>Today</span>
+            <strong>{reminders.dueToday.length}</strong>
+          </div>
+          <div>
+            <span>Next 7</span>
+            <strong>{reminders.dueNext7.length}</strong>
+          </div>
+          <div>
+            <span>Goal/check</span>
+            <strong>{reminders.goalNeededPerUpcomingCheck == null ? '-' : `$${(reminders.goalNeededPerUpcomingCheck / 100).toFixed(0)}`}</strong>
+          </div>
+        </div>
+        {reminders.overdue.length > 0 && (
+          <p className="form-error reminder-note">
+            {reminders.overdue.length} bill{reminders.overdue.length === 1 ? '' : 's'} need attention before planning extra spending.
+          </p>
+        )}
       </div>
 
       <form className="card quick-add" onSubmit={submitQuickAdd}>

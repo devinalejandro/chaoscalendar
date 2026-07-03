@@ -65,6 +65,7 @@ export type SaveBillInput = {
 
 export interface HouseholdState {
   snapshot: Snapshot
+  lastReplacedSnapshot: Snapshot | null
   /** true when the previous local snapshot failed validation and was
       quarantined rather than discarded (see data/repository.ts) */
   quarantined: boolean
@@ -94,6 +95,7 @@ export interface HouseholdState {
   applyImport: (items: AcceptedImportItem[]) => void
   saveGoal: (input: { id?: string; name: string; targetAmount: number; targetDate?: string; currentAmount?: number }) => void
   replaceSnapshot: (snapshot: Snapshot) => void
+  undoReplaceSnapshot: () => void
 }
 
 /** Builds an isolated store bound to the given storage — production uses the
@@ -123,6 +125,7 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
 
     return {
       snapshot: initialSnapshot,
+      lastReplacedSnapshot: null,
       quarantined: loaded.quarantined,
       markPaid: (instanceId, paidDate) => {
         persist(markInstancePaid(get().snapshot, instanceId, paidDate ?? iso(new Date())))
@@ -310,7 +313,14 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         )
       },
       replaceSnapshot: (snapshot) => {
+        set({ lastReplacedSnapshot: get().snapshot })
         persist(snapshot)
+      },
+      undoReplaceSnapshot: () => {
+        const previous = get().lastReplacedSnapshot
+        if (!previous) return
+        saveSnapshot(storage, previous)
+        set({ snapshot: previous, lastReplacedSnapshot: null })
       },
     }
   })

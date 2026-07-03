@@ -387,3 +387,39 @@ describe('createHouseholdStore goals', () => {
     expect(reopened.getState().snapshot.data.goals[0]).toMatchObject({ id: goal.id, name: 'Disney trip', targetAmount: 150000 })
   })
 })
+
+describe('createHouseholdStore recovery', () => {
+  it('keeps a one-step undo snapshot when replacing data', () => {
+    const storage = createMemoryStorage()
+    const store = createHouseholdStore(storage)
+    const original = store.getState().snapshot
+    const replacement = {
+      ...original,
+      updatedAt: '2026-07-02T00:00:00.000Z',
+      data: {
+        ...original.data,
+        goals: [
+          {
+            id: 'goal_restore',
+            householdId: original.data.household?.id ?? 'hh',
+            name: 'Restore test',
+            targetAmount: 1000,
+            currentAmount: 0,
+            status: 'active' as const,
+          },
+        ],
+      },
+    }
+
+    store.getState().replaceSnapshot(replacement)
+    expect(store.getState().snapshot.data.goals[0].name).toBe('Restore test')
+    expect(store.getState().lastReplacedSnapshot).toEqual(original)
+
+    store.getState().undoReplaceSnapshot()
+
+    expect(store.getState().snapshot).toEqual(original)
+    expect(store.getState().lastReplacedSnapshot).toBeNull()
+    const reopened = createHouseholdStore(storage)
+    expect(reopened.getState().snapshot).toEqual(original)
+  })
+})

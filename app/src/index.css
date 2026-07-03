@@ -661,6 +661,18 @@ button {
   color: var(--aurora-muted);
 }
 
+.reminders-card .settings-grid {
+  margin-top: 10px;
+}
+
+.reminder-grid strong {
+  color: var(--aurora-accent);
+}
+
+.reminder-note {
+  margin-bottom: 0;
+}
+
 /* calendar */
 .calendar-header {
   display: grid;

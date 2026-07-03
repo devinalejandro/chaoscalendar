@@ -394,7 +394,9 @@ promoted into recurring bill templates. 111/111 tests pass, `tsc -b`,
 now saves an active planning goal into the Snapshot instead of keeping the
 vacation target as temporary component state. The existing projection engine
 uses that saved target to answer "how many paychecks" and the goal persists
-through storage reloads. Reminder/notification UX is still pending.
+through storage reloads. Today now includes a reminder summary for overdue,
+due-today, next-7-day bills, and the per-upcoming-paycheck contribution needed
+for the active goal. Browser push/local notification UX is still pending.
 
 | M10 | PWA polish + recovery | User can export and restore validated backups before updates |
 
@@ -402,7 +404,9 @@ through storage reloads. Reminder/notification UX is still pending.
 route with backup export, validated JSON restore through the current zod
 Snapshot schema, and a compact data-status panel (schema, bill count, instance
 count, goal count). Invalid restore payloads do not overwrite existing data.
-112/112 tests pass, `tsc -b`, `vite build`, and lint are clean.
+Restore now keeps a one-step undo snapshot, exposed through Settings, so a
+valid-but-wrong backup can be reversed immediately. 115/115 tests pass,
+`tsc -b`, `vite build`, and lint are clean.
 
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
