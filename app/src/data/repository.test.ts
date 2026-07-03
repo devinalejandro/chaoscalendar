@@ -4,7 +4,9 @@ import {
   loadHouseholdSnapshot,
   markInstancePaid,
   regenerateInstances,
+  resetFutureInstancesForBill,
   saveSnapshot,
+  unmarkInstancePaid,
   upsertBill,
   upsertPaycheck,
   upsertRecurrenceRule,
@@ -110,5 +112,44 @@ describe('service helpers', () => {
     const snap = createEmptySnapshot('dev_1', NOW)
     saveSnapshot(storage, snap)
     expect(JSON.parse(storage.getItem('aurora.snapshot')!)).toEqual(snap)
+  })
+
+  it('unmarkInstancePaid reverses markInstancePaid without touching other instances', () => {
+    let snap = createEmptySnapshot('dev_1', NOW)
+    snap = {
+      ...snap,
+      data: {
+        ...snap.data,
+        billInstances: [
+          { id: 'bi_1', householdId: 'hh', title: 'A', status: 'paid', paidDate: '2026-06-05' },
+          { id: 'bi_2', householdId: 'hh', title: 'B', status: 'paid', paidDate: '2026-06-05' },
+        ],
+      },
+    }
+    snap = unmarkInstancePaid(snap, 'bi_1')
+    expect(snap.data.billInstances[0]).toMatchObject({ status: 'expected' })
+    expect(snap.data.billInstances[0].paidDate).toBeUndefined()
+    expect(snap.data.billInstances[1]).toMatchObject({ status: 'paid', paidDate: '2026-06-05' })
+  })
+
+  describe('resetFutureInstancesForBill', () => {
+    const instances = [
+      { id: 'bi_past_unpaid', billId: 'bill_1', householdId: 'hh', title: 'Water', status: 'expected' as const, dueDate: '2026-05-01' },
+      { id: 'bi_future_unpaid', billId: 'bill_1', householdId: 'hh', title: 'Water', status: 'expected' as const, dueDate: '2026-07-01' },
+      { id: 'bi_today_unpaid', billId: 'bill_1', householdId: 'hh', title: 'Water', status: 'expected' as const, dueDate: '2026-06-01' },
+      { id: 'bi_future_paid', billId: 'bill_1', householdId: 'hh', title: 'Water', status: 'paid' as const, dueDate: '2026-07-01', paidDate: '2026-06-20' },
+      { id: 'bi_other_bill', billId: 'bill_2', householdId: 'hh', title: 'Electric', status: 'expected' as const, dueDate: '2026-07-01' },
+      { id: 'bi_no_date', billId: 'bill_1', householdId: 'hh', title: 'Water', status: 'expected' as const },
+    ]
+
+    it('removes only this bill\'s unpaid instances due today or later', () => {
+      let snap = createEmptySnapshot('dev_1', NOW)
+      snap = { ...snap, data: { ...snap.data, billInstances: instances } }
+
+      snap = resetFutureInstancesForBill(snap, 'bill_1', '2026-06-01')
+
+      const remainingIds = snap.data.billInstances.map((i) => i.id).sort()
+      expect(remainingIds).toEqual(['bi_future_paid', 'bi_no_date', 'bi_other_bill', 'bi_past_unpaid'].sort())
+    })
   })
 })

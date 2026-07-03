@@ -8,7 +8,7 @@ import { BillList } from '../../ui/BillList'
 
 export default function TodayPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
-  const markPaid = useHouseholdStore((s) => s.markPaid)
+  const setInstancePaid = useHouseholdStore((s) => s.setInstancePaid)
   const addQuickBill = useHouseholdStore((s) => s.addQuickBill)
 
   const todayIso = iso(new Date())
@@ -55,7 +55,7 @@ export default function TodayPage() {
 
       <div className="card">
         <strong>Due soon</strong>
-        <BillList instances={dueSoon} onTogglePaid={markPaid} emptyLabel="Nothing due — you're caught up." />
+        <BillList instances={dueSoon} onTogglePaid={setInstancePaid} emptyLabel="Nothing due — you're caught up." />
       </div>
 
       <form className="card quick-add" onSubmit={submitQuickAdd}>

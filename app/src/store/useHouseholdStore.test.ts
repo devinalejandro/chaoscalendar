@@ -3,6 +3,7 @@ import { createHouseholdStore } from './useHouseholdStore'
 import { createMemoryStorage } from '../data/storage'
 import { saveSnapshot } from '../data/repository'
 import { createEmptySnapshot } from '../data/migrate'
+import { iso } from '../lib/dates'
 
 describe('createHouseholdStore — first run', () => {
   it('seeds a demonstration household when storage is empty', () => {
@@ -148,17 +149,99 @@ describe('createHouseholdStore — saveBill', () => {
 })
 
 describe('createHouseholdStore — setBillActive', () => {
-  it('stops future materialization but keeps existing instances', () => {
+  it('removes future/today unpaid instances immediately, keeping only past-due history', () => {
     const store = createHouseholdStore(createMemoryStorage())
     store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
     const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
-    const countBefore = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
-    expect(countBefore).toBeGreaterThan(0)
+    const before = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id)
+    const today = iso(new Date())
+    const pastCount = before.filter((i) => i.dueDate! < today).length
+    const futureOrTodayCount = before.filter((i) => i.dueDate! >= today).length
+    expect(futureOrTodayCount).toBeGreaterThan(0) // sanity: there is something to remove
 
     store.getState().setBillActive(water.id, false)
 
     expect(store.getState().snapshot.data.bills.find((b) => b.id === water.id)?.active).toBe(false)
-    const countAfter = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id).length
-    expect(countAfter).toBe(countBefore)
+    const after = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id)
+    expect(after).toHaveLength(pastCount)
+    expect(after.every((i) => i.dueDate! < today)).toBe(true)
+  })
+
+  it('keeps a paid past instance when the bill is deactivated', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
+    const firstInstance = store.getState().snapshot.data.billInstances.find((i) => i.billId === water.id)!
+    store.getState().markPaid(firstInstance.id, '2026-06-18')
+
+    store.getState().setBillActive(water.id, false)
+
+    const remaining = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id)
+    expect(remaining).toEqual([{ ...firstInstance, status: 'paid', paidDate: '2026-06-18' }])
+  })
+
+  it('reactivating regenerates the future instances that were removed on deactivation', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Water', category: 'utilities', amount: 7000, recurrence: { kind: 'monthly', dayOfMonth: 18 } })
+    const water = store.getState().snapshot.data.bills.find((b) => b.name === 'Water')!
+    const today = iso(new Date())
+    store.getState().setBillActive(water.id, false)
+    expect(store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id && i.dueDate! >= today)).toHaveLength(0)
+
+    store.getState().setBillActive(water.id, true)
+
+    const future = store.getState().snapshot.data.billInstances.filter((i) => i.billId === water.id && i.dueDate! >= today)
+    expect(future.length).toBeGreaterThan(0)
+    expect(future.every((i) => i.amount === 7000)).toBe(true)
+  })
+})
+
+describe('createHouseholdStore — editing a bill reconciles future instances', () => {
+  it('updates the amount on existing future unpaid instances, not just new ones', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Netflix v2', category: 'subscriptions', amount: 2934, recurrence: { kind: 'monthly', dayOfMonth: 7 } })
+    const bill = store.getState().snapshot.data.bills.find((b) => b.name === 'Netflix v2')!
+    const today = iso(new Date())
+    const before = store.getState().snapshot.data.billInstances.filter((i) => i.billId === bill.id)
+    expect(before.length).toBeGreaterThan(0)
+    expect(before.every((i) => i.amount === 2934)).toBe(true)
+
+    store.getState().saveBill({ id: bill.id, name: 'Netflix v2', category: 'subscriptions', amount: 3199, recurrence: { kind: 'monthly', dayOfMonth: 7 } })
+
+    const afterAll = store.getState().snapshot.data.billInstances.filter((i) => i.billId === bill.id && i.status !== 'paid')
+    const future = afterAll.filter((i) => i.dueDate! >= today)
+    const past = afterAll.filter((i) => i.dueDate! < today)
+    expect(future.length).toBeGreaterThan(0)
+    expect(future.every((i) => i.amount === 3199)).toBe(true)
+    // an already-past, still-unpaid occurrence keeps the amount that was actually due at the time
+    expect(past.every((i) => i.amount === 2934)).toBe(true)
+  })
+
+  it('does not change an already-paid instance when the template amount changes', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().saveBill({ name: 'Netflix v2', category: 'subscriptions', amount: 2934, recurrence: { kind: 'monthly', dayOfMonth: 7 } })
+    const bill = store.getState().snapshot.data.bills.find((b) => b.name === 'Netflix v2')!
+    const paidInstance = store.getState().snapshot.data.billInstances.find((i) => i.billId === bill.id)!
+    store.getState().markPaid(paidInstance.id, '2026-06-07')
+
+    store.getState().saveBill({ id: bill.id, name: 'Netflix v2', category: 'subscriptions', amount: 3199, recurrence: { kind: 'monthly', dayOfMonth: 7 } })
+
+    const stillThere = store.getState().snapshot.data.billInstances.find((i) => i.id === paidInstance.id)!
+    expect(stillThere).toMatchObject({ amount: 2934, status: 'paid', paidDate: '2026-06-07' })
+  })
+})
+
+describe('createHouseholdStore — setInstancePaid is reversible', () => {
+  it('marks an instance paid and then back to unpaid', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const instance = store.getState().snapshot.data.billInstances[0]
+
+    store.getState().setInstancePaid(instance.id, true)
+    expect(store.getState().snapshot.data.billInstances.find((i) => i.id === instance.id)?.status).toBe('paid')
+
+    store.getState().setInstancePaid(instance.id, false)
+    const reverted = store.getState().snapshot.data.billInstances.find((i) => i.id === instance.id)!
+    expect(reverted.status).toBe('expected')
+    expect(reverted.paidDate).toBeUndefined()
   })
 })

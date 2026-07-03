@@ -1,7 +1,16 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand'
 import type { Bill, BillCategory, BillInstance, Snapshot } from '../types'
 import { createMemoryStorage, getBrowserStorage, type KeyValueStorage } from '../data/storage'
-import { loadHouseholdSnapshot, markInstancePaid, regenerateInstances, saveSnapshot, upsertBill, upsertRecurrenceRule } from '../data/repository'
+import {
+  loadHouseholdSnapshot,
+  markInstancePaid,
+  regenerateInstances,
+  resetFutureInstancesForBill,
+  saveSnapshot,
+  unmarkInstancePaid,
+  upsertBill,
+  upsertRecurrenceRule,
+} from '../data/repository'
 import { assignInstancesToPaychecks } from '../lib/windows'
 import { seedHousehold } from '../data/seed'
 import { newId } from '../lib/id'
@@ -47,11 +56,21 @@ export interface HouseholdState {
       quarantined rather than discarded (see data/repository.ts) */
   quarantined: boolean
   markPaid: (instanceId: string, paidDate?: string) => void
+  unmarkPaid: (instanceId: string) => void
+  /** Checkbox-friendly wrapper: routes to markPaid or unmarkPaid based on
+      the checkbox's new checked state, so the paid toggle is reversible. */
+  setInstancePaid: (instanceId: string, paid: boolean) => void
   addQuickBill: (input: { title: string; amount: number; dueDate: string }) => void
-  /** Creates or updates a Bill template (and its RecurrenceRule, if any),
-      then regenerates instances over the default horizon. Safe to call
-      repeatedly — materialization is idempotent. */
+  /** Creates or updates a Bill template (and its RecurrenceRule, if any).
+      Any future not-yet-paid instances for this bill are discarded and
+      regenerated from the updated template — otherwise a changed amount,
+      due date, or recurrence would leave stale instances on screen for up
+      to the materialization horizon. Already-paid instances are untouched.
+      Safe to call repeatedly — materialization is idempotent. */
   saveBill: (input: SaveBillInput) => void
+  /** Deactivating removes the bill's future not-yet-paid instances (so it
+      stops counting toward Total/Bills/Left immediately) while keeping paid
+      and past history. Reactivating regenerates them from the template. */
   setBillActive: (billId: string, active: boolean) => void
 }
 
@@ -85,6 +104,13 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
       quarantined: loaded.quarantined,
       markPaid: (instanceId, paidDate) => {
         persist(markInstancePaid(get().snapshot, instanceId, paidDate ?? iso(new Date())))
+      },
+      unmarkPaid: (instanceId) => {
+        persist(unmarkInstancePaid(get().snapshot, instanceId))
+      },
+      setInstancePaid: (instanceId, paid) => {
+        if (paid) get().markPaid(instanceId)
+        else get().unmarkPaid(instanceId)
       },
       addQuickBill: ({ title, amount, dueDate }) => {
         const snapshot = get().snapshot
@@ -133,6 +159,10 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           active: previous?.active ?? true,
         }
         next = upsertBill(next, bill)
+        // Discard stale future instances before regenerating so an amount,
+        // due date, or recurrence change actually reaches Today/Paychecks
+        // instead of lingering at the old value until the instance is paid.
+        next = resetFutureInstancesForBill(next, billId, iso(new Date()))
         const { from, to } = defaultHorizon(next)
         next = regenerateInstances(next, from, to)
         persist(next)
@@ -142,6 +172,12 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         const bill = snapshot.data.bills.find((b) => b.id === billId)
         if (!bill) return
         let next = upsertBill(snapshot, { ...bill, active })
+        // Deactivating: drop future unpaid instances so they stop counting
+        // toward budgets immediately (materializeBillInstances would return
+        // [] for an inactive bill anyway, so regenerate below is a no-op for
+        // this bill and only rebuilds other bills' instances as needed).
+        // Reactivating: the same reset+regenerate rebuilds them fresh.
+        next = resetFutureInstancesForBill(next, billId, iso(new Date()))
         const { from, to } = defaultHorizon(next)
         next = regenerateInstances(next, from, to)
         persist(next)

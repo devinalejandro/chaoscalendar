@@ -10,7 +10,8 @@ export function BillList({
   showPaidDate = false,
 }: {
   instances: BillInstance[]
-  onTogglePaid: (id: string) => void
+  /** called with the checkbox's new checked state, so the toggle is reversible */
+  onTogglePaid: (id: string, paid: boolean) => void
   emptyLabel?: string
   /** hides the checkbox — used for read-only views like paid history */
   readOnly?: boolean
@@ -32,8 +33,8 @@ export function BillList({
               <input
                 type="checkbox"
                 checked={i.status === 'paid'}
-                onChange={() => onTogglePaid(i.id)}
-                aria-label={`Mark ${i.title} paid`}
+                onChange={(e) => onTogglePaid(i.id, e.target.checked)}
+                aria-label={`Mark ${i.title} ${i.status === 'paid' ? 'unpaid' : 'paid'}`}
               />
             </label>
           )}

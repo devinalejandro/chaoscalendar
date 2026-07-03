@@ -272,6 +272,30 @@ produces zero duplicate instances). `tsc -b`, `vite build`, lint all clean.
 Paid history still shows only the most recent 20 entries; CSV/JSON export
 remains M1's unfinished item, not addressed here.
 
+**M3 fix (2026-07-02): stale-forecast bugs from code review.** Three issues
+found reviewing M3 — editing a bill's amount/name never reached already-
+materialized future instances (forecasts stayed wrong until the instance was
+paid), deactivating a bill left it counted in Total/Bills/Left for up to the
+6-month horizon, and the paid checkbox was write-only (no way to undo a
+mis-click). Fixed with one new repository primitive,
+`resetFutureInstancesForBill(snapshot, billId, fromIso)`: removes a bill's
+not-yet-paid instances due today or later, keeping paid instances and
+anything already in the past as history. `saveBill` and `setBillActive` both
+call it before `regenerateInstances`, so an edit or deactivation is followed
+by a fresh rebuild from the current template — past-due unpaid instances
+intentionally keep their original amount (what was actually owed at the
+time) rather than being retroactively rewritten. Added `unmarkInstancePaid`
++ a `setInstancePaid(id, paid)` store action wired to the checkbox's actual
+`checked` value (`BillList`'s `onTogglePaid` now takes `(id, paid)` instead
+of just `(id)`). Verified live: edited Netflix $29.34→$31.99 — the Jun 7
+(past) instance stayed at $29.34, the Jul 7 (future) instance updated to
+$31.99, and the paycheck window's Bills/Left recalculated by exactly $2.65;
+deactivating Netflix removed the Jul 7 instance immediately (Bills −$31.99,
+Left +$31.99) while leaving Jun 7 as history; the paid checkbox now
+toggles both ways. 81/81 tests pass (10 new/updated, including one that
+previously asserted the buggy behavior and had to be corrected), `tsc -b`,
+`vite build`, lint all clean.
+
 | M4 | Import: parser port + fixtures + full review flow | Real paste → grouped review → accept; nothing saves unreviewed |
 | M5 | Prediction calculator + Calendar tab | Projections match hand-computed fixtures; goal/vacation planners answer PRD examples |
 | M6 | Migration + cutover: legacy export button, importer + review, Supabase Auth replaces password gate, old app archived at `/legacy/` | Live household data migrated with review; success criteria in PRD §Success all pass |

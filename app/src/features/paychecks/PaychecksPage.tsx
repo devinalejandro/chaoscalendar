@@ -6,7 +6,7 @@ import { BillList } from '../../ui/BillList'
 
 export default function PaychecksPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
-  const markPaid = useHouseholdStore((s) => s.markPaid)
+  const setInstancePaid = useHouseholdStore((s) => s.setInstancePaid)
   const todayIso = iso(new Date())
 
   const windows = [...snapshot.data.paychecks]
@@ -33,7 +33,7 @@ export default function PaychecksPage() {
             label={`${formatDisplay(paycheck.payDate)} paycheck`}
             current={current}
           >
-            <BillList instances={summary.instances} onTogglePaid={markPaid} emptyLabel="No bills in this window." />
+            <BillList instances={summary.instances} onTogglePaid={setInstancePaid} emptyLabel="No bills in this window." />
           </WindowSummaryCard>
         )
       })}

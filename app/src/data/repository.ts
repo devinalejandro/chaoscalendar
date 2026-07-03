@@ -109,6 +109,34 @@ export function markInstancePaid(snapshot: Snapshot, instanceId: string, paidDat
   return { ...snapshot, data: { ...snapshot.data, billInstances } }
 }
 
+/** Reverses markInstancePaid — used by the paid checkbox so marking a bill
+    paid by mistake can be undone from Today/Paychecks. */
+export function unmarkInstancePaid(snapshot: Snapshot, instanceId: string): Snapshot {
+  const billInstances = snapshot.data.billInstances.map((i) =>
+    i.id === instanceId ? { ...i, status: 'expected' as const, paidDate: undefined } : i,
+  )
+  return { ...snapshot, data: { ...snapshot.data, billInstances } }
+}
+
+/**
+ * Removes a bill's future (dueDate >= fromIso) not-yet-paid instances so a
+ * template edit or deactivation can be followed by regenerateInstances to
+ * rebuild them from the current template — otherwise stale title/amount/due
+ * dates would linger for up to the materialization horizon. Paid instances
+ * and anything already in the past are kept as history; instances without a
+ * due date are kept defensively (materializeBillInstances always sets one,
+ * so this should be unreachable for a templated bill).
+ */
+export function resetFutureInstancesForBill(snapshot: Snapshot, billId: string, fromIso: string): Snapshot {
+  const billInstances = snapshot.data.billInstances.filter((i) => {
+    if (i.billId !== billId) return true
+    if (i.status === 'paid') return true
+    if (!i.dueDate) return true
+    return i.dueDate < fromIso
+  })
+  return { ...snapshot, data: { ...snapshot.data, billInstances } }
+}
+
 export function upsertGoal(snapshot: Snapshot, goal: Goal): Snapshot {
   const exists = snapshot.data.goals.some((g) => g.id === goal.id)
   const goals = exists ? snapshot.data.goals.map((g) => (g.id === goal.id ? goal : g)) : [...snapshot.data.goals, goal]
