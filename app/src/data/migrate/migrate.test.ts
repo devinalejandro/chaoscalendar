@@ -24,14 +24,27 @@ describe('loadSnapshot', () => {
     if (result.ok) expect(result.snapshot).toEqual(current)
   })
 
-  it('migrates a v2 snapshot to current, adding an empty recurrenceRules array', () => {
+  it('migrates a v2 snapshot to current, adding recurrenceRules plus auth/audit collections', () => {
     const result = loadSnapshot(v2Payload)
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.migrated).toBe(true)
     expect(result.snapshot.schemaVersion).toBe(SCHEMA_VERSION)
     expect(result.snapshot.data.recurrenceRules).toEqual([])
+    expect(result.snapshot.data.users).toEqual([])
+    expect(result.snapshot.data.auditEvents).toEqual([])
     expect(result.snapshot.data.paychecks).toEqual(v2Payload.data.paychecks)
+  })
+
+  it('migrates a v3 snapshot to current, adding auth/audit collections', () => {
+    const v3 = { ...v2Payload, schemaVersion: 3, data: { ...v2Payload.data, recurrenceRules: [] } }
+    const result = loadSnapshot(v3)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.migrated).toBe(true)
+    expect(result.snapshot.schemaVersion).toBe(SCHEMA_VERSION)
+    expect(result.snapshot.data.users).toEqual([])
+    expect(result.snapshot.data.auditEvents).toEqual([])
   })
 
   it('reports reason "empty" for null/undefined input', () => {
@@ -60,5 +73,7 @@ describe('createEmptySnapshot', () => {
     expect(snap.data.household).toBeUndefined()
     expect(snap.data.paychecks).toEqual([])
     expect(snap.data.recurrenceRules).toEqual([])
+    expect(snap.data.users).toEqual([])
+    expect(snap.data.auditEvents).toEqual([])
   })
 })

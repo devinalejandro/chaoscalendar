@@ -286,6 +286,33 @@ describe('createHouseholdStore — applyImport', () => {
     expect(netflix).toMatchObject({ status: 'paid', paidDate: '2026-06-07' })
   })
 
+  it('learns an accepted imported bill as a monthly bill template and generates future instances', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+
+    store.getState().applyImport([{ type: 'bill', title: 'TEP', amount: 15474, date: '2026-07-22', paid: false }])
+
+    const bill = store.getState().snapshot.data.bills.find((b) => b.name === 'TEP')!
+    expect(bill).toMatchObject({ expectedAmount: 15474, dueDay: 22, category: 'utilities', isFixed: true, active: true })
+    expect(bill.recurrenceRuleId).toBeTruthy()
+    const instances = store.getState().snapshot.data.billInstances.filter((i) => i.billId === bill.id)
+    expect(instances.some((i) => i.dueDate === '2026-07-22' && i.amount === 15474)).toBe(true)
+    expect(instances.some((i) => i.dueDate === '2026-08-22' && i.amount === 15474)).toBe(true)
+  })
+
+  it('updates an existing learned template instead of creating a duplicate template', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+
+    store.getState().applyImport([{ type: 'bill', title: 'STRATA CC scheduled', amount: 4500, date: '2026-07-10', paid: false }])
+
+    const strataBills = store.getState().snapshot.data.bills.filter((b) => b.name === 'STRATA CC')
+    expect(strataBills).toHaveLength(1)
+    expect(strataBills[0]).toMatchObject({ expectedAmount: 4500, dueDay: 10 })
+    const instancesOnDate = store
+      .getState()
+      .snapshot.data.billInstances.filter((i) => i.billId === strataBills[0].id && i.dueDate === '2026-07-10' && i.amount === 4500)
+    expect(instancesOnDate).toHaveLength(1)
+  })
+
   it('reconciles paid status onto a matching instance instead of skipping or duplicating it', () => {
     // The seeded household already has an unpaid Netflix instance materialized
     // for 2026-06-07 from the Bills-tab template. Importing a paste that
@@ -308,10 +335,14 @@ describe('createHouseholdStore — applyImport', () => {
     const store = createHouseholdStore(createMemoryStorage())
     const item = { type: 'bill' as const, title: 'Imported Rent', amount: 180000, date: '2026-06-06', paid: false }
     store.getState().applyImport([item])
-    const countAfterFirst = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent').length
+    const countAfterFirst = store
+      .getState()
+      .snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent' && i.dueDate === item.date && i.amount === item.amount).length
 
     store.getState().applyImport([item])
-    const countAfterSecond = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent').length
+    const countAfterSecond = store
+      .getState()
+      .snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent' && i.dueDate === item.date && i.amount === item.amount).length
 
     expect(countAfterSecond).toBe(countAfterFirst)
     expect(countAfterFirst).toBe(1)

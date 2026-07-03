@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Household, Paycheck, Bill, BillInstance, Goal } from '../../types'
-import type { Snapshot } from '../../types'
+import { migrateV3toV4 } from './v4'
 
 /** Frozen shape of the schemaVersion-2 snapshot (the shape shipped in M0,
     before recurrenceRules existed). Entity sub-schemas are unchanged between
@@ -22,8 +22,8 @@ export type SnapshotV2 = z.infer<typeof SnapshotV2>
 /** v2 -> v3: adds recurrenceRules. Purely additive — v2 had no recurrence
     data at all, so every household starts with an empty rules list and picks
     up recurrence the next time a bill template is edited to use one. */
-export function migrateV2toV3(prev: SnapshotV2): Snapshot {
-  return {
+export function migrateV2toV3(prev: SnapshotV2) {
+  const v3 = {
     schemaVersion: 3,
     updatedAt: prev.updatedAt,
     deviceId: prev.deviceId,
@@ -31,5 +31,6 @@ export function migrateV2toV3(prev: SnapshotV2): Snapshot {
       ...prev.data,
       recurrenceRules: [],
     },
-  }
+  } satisfies import('./v4').SnapshotV3
+  return migrateV3toV4(v3)
 }

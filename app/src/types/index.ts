@@ -158,8 +158,8 @@ export type AuditEvent = z.infer<typeof AuditEvent>
 
 /** Versioned envelope for the local cache; every shape change bumps this and
     adds a migration in src/data/migrate/.
-    v3: added recurrenceRules (see src/data/migrate/v3.ts). */
-export const SCHEMA_VERSION = 3
+    v4: added users and auditEvents for the Supabase/auth foundation. */
+export const SCHEMA_VERSION = 4
 
 export const Snapshot = z.object({
   schemaVersion: z.literal(SCHEMA_VERSION),
@@ -167,11 +167,13 @@ export const Snapshot = z.object({
   deviceId: z.string(),
   data: z.object({
     household: Household.optional(),
+    users: z.array(User).default([]),
     paychecks: z.array(Paycheck).default([]),
     bills: z.array(Bill).default([]),
     billInstances: z.array(BillInstance).default([]),
     goals: z.array(Goal).default([]),
     recurrenceRules: z.array(RecurrenceRule).default([]),
+    auditEvents: z.array(AuditEvent).default([]),
   }),
 })
 export type Snapshot = z.infer<typeof Snapshot>

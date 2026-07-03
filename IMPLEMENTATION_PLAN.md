@@ -363,6 +363,31 @@ static app is archived at `app/public/legacy/index.html` and served via
 React routes. `netlify build` passes and verifies the new root plus legacy
 archive are both present in the publish output.
 
+| M7 | Auth + Supabase foundation: SQL schema, RLS, local schema migration, auth boundary | Supabase schema matches finance entities; local mode still builds without credentials |
+
+**M7 status (2026-07-02):** Auth/data foundation started in a deploy-safe way.
+Added `supabase/migrations/202607020001_m7_auth_finance_foundation.sql` with
+households, household members, paychecks, recurrence rules, bills, bill
+instances, goals, import batches/suggestions, and audit events. RLS is enabled
+on every table and scoped through `public.is_household_member()`. The local
+snapshot moved to schema v4 with `users` and `auditEvents`, including v2->v4
+and v3->v4 migrations plus legacy importer compatibility. The React shell now
+has a Supabase env boundary/status chip: it stays in local draft mode when
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are absent, so Netlify builds
+and local development are not blocked before credentials are configured.
+
+| M8 | Smart bills + import learning: accepted imports create/update fixed bill templates | Imported recurring-looking bills generate future instances without duplicating the pasted row |
+
+**M8 status (2026-07-02):** Import learning started. Accepted `bill` rows now
+create or update monthly bill templates, infer practical categories from
+Karla-style titles (TEP, Netflix, Citi/STRATA CC, etc.), link the exact imported
+occurrence to the learned template, and regenerate the 6-month forecast. The
+dedupe path now matches by template ownership too, so noisy titles like
+`STRATA CC scheduled` reconcile to the existing STRATA template instead of
+creating duplicate July rows. Appointments remain one-off instances and are not
+promoted into recurring bill templates. 111/111 tests pass, `tsc -b`,
+`vite build`, and lint are clean.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

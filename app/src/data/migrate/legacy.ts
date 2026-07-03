@@ -137,11 +137,13 @@ export function importLegacyAurora(raw: unknown, nowIso: string, deviceId = 'leg
         createdAt: nowIso,
         updatedAt: nowIso,
       },
+      users: [],
       paychecks,
       bills: [],
       billInstances: instances,
       goals: [],
       recurrenceRules: [],
+      auditEvents: [],
     },
   }
 

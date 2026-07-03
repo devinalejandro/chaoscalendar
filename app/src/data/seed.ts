@@ -86,6 +86,6 @@ export function seedHousehold(nowIso: string): Snapshot {
     schemaVersion: SCHEMA_VERSION,
     updatedAt: nowIso,
     deviceId: 'seed',
-    data: { household, paychecks, bills, billInstances, goals: [], recurrenceRules },
+    data: { household, users: [], paychecks, bills, billInstances, goals: [], recurrenceRules, auditEvents: [] },
   }
 }

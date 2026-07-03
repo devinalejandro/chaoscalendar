@@ -73,6 +73,34 @@ button {
   color: var(--aurora-muted);
 }
 
+.auth-status {
+  max-width: 360px;
+  margin: 10px auto 0;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--aurora-line);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.auth-status span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--aurora-accent);
+}
+
+.auth-status small {
+  font-size: 11.5px;
+  color: var(--aurora-muted);
+  line-height: 1.35;
+}
+
+.auth-status-live span {
+  color: var(--aurora-success);
+}
+
 .tabbar {
   position: fixed;
   bottom: 16px;

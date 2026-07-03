@@ -5,6 +5,7 @@ import CalendarPage from './features/calendar/CalendarPage'
 import BillsPage from './features/bills/BillsPage'
 import ImportPage from './features/import/ImportPage'
 import MigrationPage from './features/migration/MigrationPage'
+import AuthStatus from './features/auth/AuthStatus'
 
 const TABS = [
   { to: '/today', label: 'Today' },
@@ -25,6 +26,7 @@ export default function App() {
         <Link to="/migration" className="import-entry import-entry-secondary">
           Legacy migration
         </Link>
+        <AuthStatus />
       </header>
 
       <Routes>

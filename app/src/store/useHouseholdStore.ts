@@ -17,6 +17,7 @@ import { seedHousehold } from '../data/seed'
 import { newId } from '../lib/id'
 import { addMonths, iso } from '../lib/dates'
 import { buildRecurrenceRule, type RecurrenceInput } from '../lib/recurrence'
+import { dayOfMonth, findMatchingBillTemplate, inferBillCategory } from '../lib/billLearning'
 
 const DEVICE_ID_KEY = 'aurora.deviceId'
 
@@ -226,12 +227,42 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         const billLike = items.filter((i) => i.type === 'bill' || i.type === 'appointment')
         const newInstances: BillInstance[] = []
         billLike.forEach((i) => {
+          let billId: string | undefined
+          if (i.type === 'bill' && i.amount != null) {
+            const matchedBill = findMatchingBillTemplate(next.data.bills, i.title)
+            billId = matchedBill?.id ?? newId('bill')
+            const ruleId = matchedBill?.recurrenceRuleId ?? newId('rr')
+            const dueDay = dayOfMonth(i.date)
+            next = upsertRecurrenceRule(next, {
+              id: ruleId,
+              householdId,
+              frequency: 'monthly',
+              dayOfMonth: dueDay,
+            })
+            next = upsertBill(next, {
+              id: billId,
+              householdId,
+              name: matchedBill?.name ?? i.title,
+              category: matchedBill?.category ?? inferBillCategory(i.title),
+              expectedAmount: i.amount,
+              dueDay,
+              recurrenceRuleId: ruleId,
+              isFixed: true,
+              active: matchedBill?.active ?? true,
+              notes: matchedBill?.notes,
+            })
+          }
+
           const match = next.data.billInstances.find(
-            (existing) => existing.title === i.title && existing.dueDate === i.date && existing.amount === (i.amount ?? undefined),
+            (existing) =>
+              existing.dueDate === i.date &&
+              existing.amount === (i.amount ?? undefined) &&
+              (existing.title === i.title || (billId != null && existing.billId === billId)),
           )
           if (!match) {
             newInstances.push({
               id: newId('bi'),
+              billId,
               householdId,
               title: i.title,
               amount: i.amount ?? undefined,
@@ -252,6 +283,11 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
           // windows from this import can also cover pre-existing instances.
           const billInstances = assignInstancesToPaychecks([...next.data.billInstances, ...newInstances], next.data.paychecks)
           next = { ...next, data: { ...next.data, billInstances } }
+        }
+
+        if (billLike.some((i) => i.type === 'bill' && i.amount != null)) {
+          const { from, to } = defaultHorizon(next)
+          next = regenerateInstances(next, from, to)
         }
 
         persist(next)
