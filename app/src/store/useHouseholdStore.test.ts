@@ -370,3 +370,20 @@ describe('createHouseholdStore — applyImport', () => {
     expect(after).toMatchObject({ periodStart: '2026-07-01', periodEnd: '2026-07-14' })
   })
 })
+
+describe('createHouseholdStore goals', () => {
+  it('saves and updates a persisted planning goal', () => {
+    const storage = createMemoryStorage()
+    const store = createHouseholdStore(storage)
+
+    store.getState().saveGoal({ name: 'Vacation', targetAmount: 120000 })
+
+    const goal = store.getState().snapshot.data.goals.find((g) => g.name === 'Vacation')!
+    expect(goal).toMatchObject({ targetAmount: 120000, currentAmount: 0, status: 'active' })
+
+    store.getState().saveGoal({ id: goal.id, name: 'Disney trip', targetAmount: 150000 })
+    const reopened = createHouseholdStore(storage)
+    expect(reopened.getState().snapshot.data.goals).toHaveLength(1)
+    expect(reopened.getState().snapshot.data.goals[0]).toMatchObject({ id: goal.id, name: 'Disney trip', targetAmount: 150000 })
+  })
+})

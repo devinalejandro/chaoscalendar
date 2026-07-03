@@ -388,6 +388,22 @@ creating duplicate July rows. Appointments remain one-off instances and are not
 promoted into recurring bill templates. 111/111 tests pass, `tsc -b`,
 `vite build`, and lint are clean.
 
+| M9 | Goals, vacation planner + reminders | Goals persist and planner guidance survives reloads |
+
+**M9 status (2026-07-02):** First slice started. The Paychecks prediction card
+now saves an active planning goal into the Snapshot instead of keeping the
+vacation target as temporary component state. The existing projection engine
+uses that saved target to answer "how many paychecks" and the goal persists
+through storage reloads. Reminder/notification UX is still pending.
+
+| M10 | PWA polish + recovery | User can export and restore validated backups before updates |
+
+**M10 status (2026-07-02):** First recovery slice started. Added a Settings
+route with backup export, validated JSON restore through the current zod
+Snapshot schema, and a compact data-status panel (schema, bill count, instance
+count, goal count). Invalid restore payloads do not overwrite existing data.
+112/112 tests pass, `tsc -b`, `vite build`, and lint are clean.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

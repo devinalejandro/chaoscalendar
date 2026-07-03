@@ -6,6 +6,7 @@ import BillsPage from './features/bills/BillsPage'
 import ImportPage from './features/import/ImportPage'
 import MigrationPage from './features/migration/MigrationPage'
 import AuthStatus from './features/auth/AuthStatus'
+import SettingsPage from './features/settings/SettingsPage'
 
 const TABS = [
   { to: '/today', label: 'Today' },
@@ -26,6 +27,9 @@ export default function App() {
         <Link to="/migration" className="import-entry import-entry-secondary">
           Legacy migration
         </Link>
+        <Link to="/settings" className="import-entry import-entry-secondary">
+          Settings
+        </Link>
         <AuthStatus />
       </header>
 
@@ -37,6 +41,7 @@ export default function App() {
         <Route path="/bills" element={<BillsPage />} />
         <Route path="/import" element={<ImportPage />} />
         <Route path="/migration" element={<MigrationPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
 
       <nav className="tabbar" aria-label="Main">

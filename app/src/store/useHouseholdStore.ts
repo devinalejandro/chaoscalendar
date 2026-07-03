@@ -9,6 +9,7 @@ import {
   saveSnapshot,
   unmarkInstancePaid,
   upsertBill,
+  upsertGoal,
   upsertPaycheck,
   upsertRecurrenceRule,
 } from '../data/repository'
@@ -91,6 +92,7 @@ export interface HouseholdState {
       matches an existing instance (same title/date/amount) is skipped so
       re-running an import isn't destructive or duplicative. */
   applyImport: (items: AcceptedImportItem[]) => void
+  saveGoal: (input: { id?: string; name: string; targetAmount: number; targetDate?: string; currentAmount?: number }) => void
   replaceSnapshot: (snapshot: Snapshot) => void
 }
 
@@ -291,6 +293,21 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         }
 
         persist(next)
+      },
+      saveGoal: (input) => {
+        const snapshot = get().snapshot
+        const householdId = snapshot.data.household?.id ?? 'hh_local'
+        persist(
+          upsertGoal(snapshot, {
+            id: input.id ?? newId('goal'),
+            householdId,
+            name: input.name,
+            targetAmount: input.targetAmount,
+            targetDate: input.targetDate,
+            currentAmount: input.currentAmount ?? 0,
+            status: 'active',
+          }),
+        )
       },
       replaceSnapshot: (snapshot) => {
         persist(snapshot)

@@ -9,7 +9,10 @@ import { BillList } from '../../ui/BillList'
 export default function PaychecksPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
   const setInstancePaid = useHouseholdStore((s) => s.setInstancePaid)
-  const [goal, setGoal] = useState('')
+  const saveGoal = useHouseholdStore((s) => s.saveGoal)
+  const savedGoal = snapshot.data.goals.find((g) => g.status === 'active')
+  const [goal, setGoal] = useState(savedGoal ? (savedGoal.targetAmount / 100).toString() : '')
+  const [goalName, setGoalName] = useState(savedGoal?.name ?? 'Vacation')
   const todayIso = iso(new Date())
   const goalAmount = goal.trim() ? parseCents(goal) : null
   const projection = buildProjection({
@@ -52,6 +55,12 @@ export default function PaychecksPage() {
         <div className="goal-row">
           <input
             className="field"
+            placeholder="Goal name"
+            value={goalName}
+            onChange={(e) => setGoalName(e.target.value)}
+          />
+          <input
+            className="field"
             inputMode="decimal"
             placeholder="Vacation goal, e.g. 1200"
             value={goal}
@@ -61,6 +70,17 @@ export default function PaychecksPage() {
             <span className="label">Paychecks</span>
             <span className="value">{goalAmount && goalAmount > 0 ? (projection.paychecksToGoal ?? 'Not in horizon') : '—'}</span>
           </div>
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={!goalAmount || goalAmount <= 0 || !goalName.trim()}
+            onClick={() => {
+              if (!goalAmount || goalAmount <= 0) return
+              saveGoal({ id: savedGoal?.id, name: goalName.trim(), targetAmount: goalAmount })
+            }}
+          >
+            Save goal
+          </button>
         </div>
       </section>
 
