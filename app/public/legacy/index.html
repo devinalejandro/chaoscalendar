@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aurora Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#F8ECE9;}
+  .fc-scroll::-webkit-scrollbar{display:none}
+  .fc-scroll{scrollbar-width:none}
+  input,textarea,button{font-family:inherit}
+  @keyframes fcTwinkle{0%,100%{opacity:.25}50%{opacity:.9}}
+  html{height:100%}
+  body{min-height:100%;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#4A3436;}
+  .desktop-shell{min-height:100vh;width:100%;display:block;position:relative;overflow:hidden;background:#F8ECE9;}
+  .desktop-intro{display:none;}
+  .app-column{position:relative;z-index:1;display:block;min-height:100vh;}
+  #app{position:relative;width:100%;min-height:100vh;background:#F8ECE9;box-shadow:none;overflow:hidden;}
+  @media (min-width: 760px){
+    #app{max-width:none;border-radius:0;min-height:100vh;}
+    #app > div{min-height:100vh !important;}
+  }
+  @media (max-width: 759px){
+    .desktop-shell{display:block;min-height:100vh;padding:0;background:#F8ECE9;overflow:visible;}
+    .app-column{display:block;}
+    #app{max-width:none;min-height:100vh;box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+
+<main class="desktop-shell">
+  <section class="app-column" aria-label="Aurora Calendar app">
+    <div id="app"></div>
+  </section>
+</main>
+
+<template id="t">
+<div style="position:relative;width:100%;min-height:100vh;color:#4A3436;font-family:'Plus Jakarta Sans',system-ui,sans-serif;overflow:hidden;background:linear-gradient(165deg,#FBEAE6 0%,#F7E3EC 45%,#EFE2F0 100%);">
+
+<!-- sparkle layer -->
+<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="glowA" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#F6C9D6" stop-opacity="0.55"/><stop offset="100%" stop-color="#F6C9D6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glowB" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#E4D3F0" stop-opacity="0.5"/><stop offset="100%" stop-color="#E4D3F0" stop-opacity="0"/></radialGradient>
+  </defs>
+  <circle cx="15%" cy="12%" r="160" fill="url(#glowA)"/>
+  <circle cx="88%" cy="20%" r="150" fill="url(#glowB)"/>
+  <circle cx="80%" cy="85%" r="170" fill="url(#glowA)"/>
+  <g></g>
+</svg>
+<div style="position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;">
+  <sc-for list="{{ sparkles }}" as="sp" hint-placeholder-count="0">
+    <span style="{{ sp.style }}">{{ sp.chr }}</span>
+  </sc-for>
+</div>
+
+<!-- ============ ONBOARDING ============ -->
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;background:transparent;z-index:1;">
+  <div style="height:0;"></div>
+  <div style="flex:0 0 auto;padding:6px 22px 14px;display:flex;gap:6px;">
+    <sc-for list="{{ obDots }}" as="d" hint-placeholder-count="6">
+      <div style="height:4px;border-radius:2px;flex:1;background:{{ d.bg }};"></div>
+    </sc-for>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:8px 22px 16px;">
+
+    <sc-if value="{{ isOb1 }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top:20px;">
+        <div style="width:100%;height:220px;border-radius:28px;background:linear-gradient(135deg,#F1B9C7,#D98CA0);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:26px;box-shadow:0 14px 30px rgba(201,124,144,.28);">
+          <span style="font-size:52px;">✦</span>
+          <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-top:10px;letter-spacing:-.2px;">Yo Momma K's Calendar</span>
+          <span style="position:absolute;top:16px;right:20px;font-size:20px;color:#fff;opacity:.8;">✧</span>
+          <span style="position:absolute;bottom:20px;left:24px;font-size:16px;color:#fff;opacity:.7;">✧</span>
+        </div>
+        <h1 style="font-size:30px;line-height:1.2;font-weight:800;margin:0 0 12px;color:#4A3436;letter-spacing:-.3px;">Thrilled to plan your family's days!</h1>
+        <p style="font-size:15px;line-height:1.55;color:#9C7F76;margin:0 0 24px;">Bills, paychecks, calendars, and family life — organized together, beautifully.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ obWelcomeRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:13px;background:#FFFFFF;border-radius:16px;padding:12px 14px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+              <div style="width:36px;height:36px;border-radius:11px;background:{{ r.bg }};display:flex;align-items:center;justify-content:center;font-size:16px;color:{{ r.fg }};flex:0 0 auto;">{{ r.icon }}</div>
+              <span style="font-size:14.5px;color:#4A3436;font-weight:500;">{{ r.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb2 }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 6px;color:#4A3436;">How do you want to start?</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 20px;">Pick what's easiest — change it anytime.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ obMethods }}" as="m" hint-placeholder-count="4">
+            <button onClick="{{ m.onClick }}" style="{{ m.style }}">
+              <div style="width:42px;height:42px;border-radius:13px;background:{{ m.iconBg }};display:flex;align-items:center;justify-content:center;font-size:18px;color:#C97C93;flex:0 0 auto;">{{ m.icon }}</div>
+              <div style="text-align:left;flex:1;">
+                <div style="font-size:15.5px;font-weight:700;color:#4A3436;">{{ m.title }}</div>
+                <div style="font-size:12.5px;color:#9C7F76;margin-top:2px;">{{ m.sub }}</div>
+              </div>
+              <sc-if value="{{ m.selected }}" hint-placeholder-val="{{ true }}"><span style="color:#C97C93;font-size:18px;">✓</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb2b }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 6px;color:#4A3436;">Paste your notes list</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 14px;">From Apple Notes, a text file, or anywhere.</p>
+        <textarea value="{{ pasteText }}" onChange="{{ onPasteChange }}" spellcheck="false" style="width:100%;height:220px;background:#FFFFFF;border:none;border-radius:18px;color:#4A3436;font-size:14.5px;line-height:1.7;padding:16px;resize:none;outline:none;box-shadow:0 4px 14px rgba(201,124,144,.10);"></textarea>
+        <button onClick="{{ onParse }}" style="margin-top:14px;width:100%;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#E7A9B8,#C97C93);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;box-shadow:0 10px 22px rgba(201,124,144,.35);">Preview what we found →</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb3 }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 6px;color:#4A3436;">When do you get paid?</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 20px;">We'll group bills into windows.</p>
+        <div style="font-size:11.5px;font-weight:700;color:#9C7F76;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 10px;">Frequency</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+          <sc-for list="{{ payFreqOptions }}" as="f" hint-placeholder-count="5">
+            <button onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #F5E7EA;">
+            <span style="font-size:15px;">Next paycheck</span><input value="{{ payDate }}" onChange="{{ onPayDate }}" placeholder="YYYY-MM-DD" style="width:140px;text-align:right;background:#FCEEF1;border:none;border-radius:8px;padding:8px 10px;color:#C97C93;font-size:14px;font-weight:700;outline:none;"/>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #F5E7EA;">
+            <span style="font-size:15px;">Typical amount</span><input value="{{ payAmount }}" onChange="{{ onPayAmount }}" inputmode="decimal" placeholder="0" style="width:140px;text-align:right;background:#FCEEF1;border:none;border-radius:8px;padding:8px 10px;color:#C97C93;font-size:14px;font-weight:700;outline:none;"/>
+          </div>
+          <button onClick="{{ onToggleVary }}" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#4A3436;">
+            <span style="font-size:15px;">Amount changes each time</span>
+            <div style="{{ varyTrackStyle }}"><div style="{{ varyKnobStyle }}"></div></div>
+          </button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb4 }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 4px;color:#4A3436;">Here's what we found</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 16px;">Uncheck anything you don't want.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <sc-for list="{{ parsedBuckets }}" as="b" hint-placeholder-count="6">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin:0 4px 8px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ b.color }};"></span>
+                <span style="font-size:12px;font-weight:700;color:#4A3436;text-transform:uppercase;letter-spacing:.4px;">{{ b.label }}</span>
+                <span style="font-size:12.5px;color:#9C7F76;">{{ b.countStr }}</span>
+              </div>
+              <div style="background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #F5E7EA;">
+                    <button onClick="{{ it.onToggle }}" style="width:22px;height:22px;border-radius:50%;border:2px solid #F1DEE2;background:#fff;flex:0 0 auto;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;"><sc-if value="{{ it.sel }}" hint-placeholder-val="{{ true }}"><span style="color:#8CA679;font-size:14px;font-weight:700;">✓</span></sc-if></button>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:14.5px;color:#4A3436;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ it.title }}</div>
+                      <sc-if value="{{ it.hasMeta }}" hint-placeholder-val="{{ true }}"><div style="font-size:12.5px;color:#9C7F76;margin-top:1px;">{{ it.meta }}</div></sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb5 }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 6px;color:#4A3436;">When should we remind you?</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 20px;">Gentle nudges, never nagging.</p>
+        <div style="font-size:11.5px;font-weight:700;color:#9C7F76;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 10px;">Lead time</div>
+        <div style="background:#FFFFFF;border-radius:18px;overflow:hidden;margin-bottom:20px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+          <sc-for list="{{ remindLeadOptions }}" as="r" hint-placeholder-count="4">
+            <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #F5E7EA;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#4A3436;">
+              <span style="font-size:15px;">{{ r.label }}</span>
+              <div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-size:11.5px;font-weight:700;color:#9C7F76;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 10px;">Remind me about</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <sc-for list="{{ remindTypeChips }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isOb6 }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;margin:10px 0 6px;color:#4A3436;">What should open first?</h1>
+        <p style="font-size:14.5px;color:#9C7F76;margin:0 0 20px;">Switch anytime from the nav bar.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ homeViewOptions }}" as="h" hint-placeholder-count="4">
+            <button onClick="{{ h.onClick }}" style="{{ h.style }}">
+              <div style="width:42px;height:42px;border-radius:13px;background:{{ h.iconBg }};display:flex;align-items:center;justify-content:center;font-size:18px;color:#C97C93;flex:0 0 auto;">{{ h.icon }}</div>
+              <div style="text-align:left;flex:1;">
+                <div style="font-size:15.5px;font-weight:700;color:#4A3436;">{{ h.title }}</div>
+                <div style="font-size:12.5px;color:#9C7F76;margin-top:2px;">{{ h.sub }}</div>
+              </div>
+              <sc-if value="{{ h.selected }}" hint-placeholder-val="{{ true }}"><span style="color:#C97C93;font-size:18px;">✓</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+  <div style="flex:0 0 auto;padding:12px 22px calc(20px + env(safe-area-inset-bottom));display:flex;gap:12px;">
+    <sc-if value="{{ obCanBack }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ obBack }}" style="height:52px;padding:0 22px;border:none;border-radius:16px;background:#FFFFFF;color:#4A3436;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);">Back</button>
+    </sc-if>
+    <button onClick="{{ obNext }}" style="flex:1;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#E7A9B8,#C97C93);color:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 10px 22px rgba(201,124,144,.35);">{{ obNextLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ APP ============ -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;background:transparent;z-index:1;">
+  <div style="height:0;"></div>
+  <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 20px 12px;">
+    <button style="width:42px;height:42px;border:none;border-radius:13px;background:#FFFFFF;color:#C97C93;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.14);display:flex;align-items:center;justify-content:center;">▦</button>
+    <div style="text-align:center;">
+      <div style="font-size:11px;color:#9C7F76;">{{ todayStr }}</div>
+      <div style="font-size:18px;font-weight:800;color:#4A3436;">{{ tabTitle }}</div>
+    </div>
+    <div style="position:relative;">
+      <button onClick="{{ openSettings }}" style="width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#E7A9B8,#C97C93);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.25);">FC</button>
+      <span style="position:absolute;top:-6px;left:-8px;font-size:13px;color:#F1B9C7;">✧</span>
+    </div>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:4px 18px 116px;">
+
+    <!-- TODAY -->
+    <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div style="background:linear-gradient(150deg,#F1B9C7,#D98CA0);border-radius:26px;padding:20px;position:relative;overflow:hidden;box-shadow:0 14px 30px rgba(201,124,144,.28);">
+          <span style="position:absolute;top:14px;right:18px;font-size:16px;color:#fff;opacity:.7;">✧</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>
+            <span style="font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;">Paycheck window · {{ pc.windowStr }}</span>
+          </div>
+          <div style="font-size:38px;font-weight:800;color:#fff;margin:10px 0 2px;letter-spacing:-1px;">{{ pc.leftStr }}</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.85);margin-bottom:14px;">left to spend this window</div>
+          <div style="height:8px;border-radius:4px;background:rgba(255,255,255,.35);overflow:hidden;margin-bottom:16px;display:flex;">
+            <div style="width:{{ pc.billsPct }};background:#fff;"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:18px;">
+              <sc-for list="{{ pc.stats }}" as="s" hint-placeholder-count="3">
+                <div><div style="font-size:11px;color:rgba(255,255,255,.75);">{{ s.label }}</div><div style="font-size:14px;font-weight:700;color:#fff;">{{ s.value }}</div></div>
+              </sc-for>
+            </div>
+            <button onClick="{{ goMoney }}" style="width:40px;height:40px;border-radius:50%;border:none;background:#fff;color:#C97C93;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">→</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:16px;font-weight:800;color:#4A3436;margin:0 4px 10px;">This week <span style="font-size:12px;color:#E3B87C;">✧</span></div>
+          <div style="display:flex;gap:8px;overflow-x:auto;" class="fc-scroll">
+            <sc-for list="{{ weekStrip }}" as="d" hint-placeholder-count="7">
+              <button onClick="{{ d.onClick }}" style="{{ d.style }}">
+                <span style="font-size:10.5px;opacity:.8;">{{ d.dow }}</span>
+                <span style="font-size:16px;font-weight:800;margin-top:2px;">{{ d.day }}</span>
+                <div style="display:flex;gap:2px;height:5px;margin-top:4px;">
+                  <sc-for list="{{ d.dots }}" as="dt" hint-placeholder-count="2"><span style="width:4px;height:4px;border-radius:50%;background:{{ dt.c }};"></span></sc-for>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:0 4px 10px;">
+            <span style="font-size:16px;font-weight:800;color:#4A3436;">Due soon</span>
+            <button onClick="{{ goMoney }}" style="background:none;border:none;color:#C97C93;font-size:13px;font-weight:700;cursor:pointer;">See all</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ dueSoon }}" as="it" hint-placeholder-count="3">
+              <div style="background:#FFFFFF;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <div style="width:40px;height:40px;border-radius:13px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ it.catFg }};flex:0 0 auto;">{{ it.icon }}</div>
+                <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;">
+                  <div style="{{ it.titleStyle }}">{{ it.title }}</div>
+                  <div style="font-size:12.5px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="{{ it.amountStyle }}">{{ it.amountStr }}</div>
+                  <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#fff;font-size:11px;font-weight:700;">✓</span></sc-if></button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:16px;font-weight:800;color:#4A3436;margin:0 4px 10px;">Family reminders</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ famReminders }}" as="t" hint-placeholder-count="3">
+              <div style="background:#FFFFFF;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <button onClick="{{ t.onToggle }}" style="{{ t.checkStyle }}"><sc-if value="{{ t.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#fff;font-size:11px;font-weight:700;">✓</span></sc-if></button>
+                <span style="{{ t.titleStyle }}">{{ t.title }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- MONEY -->
+    <sc-if value="{{ isMoney }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding:2px 0 16px;" class="fc-scroll">
+          <sc-for list="{{ moneySubs }}" as="s" hint-placeholder-count="5">
+            <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isMoneyPay }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                <div>
+                  <div style="font-size:16px;font-weight:800;color:#4A3436;">Prediction calculator</div>
+                  <div style="font-size:12.5px;color:#9C7F76;margin-top:2px;">Based on upcoming paycheck windows and fixed bills.</div>
+                </div>
+                <span style="font-size:20px;color:#C97C93;">✧</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Next 4 left</div><div style="font-size:15px;font-weight:800;color:#8CA679;">{{ pred.next4Str }}</div></div>
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Next 8 left</div><div style="font-size:15px;font-weight:800;color:#8CA679;">{{ pred.next8Str }}</div></div>
+                <div style="background:#FBF3F1;border-radius:14px;padding:10px;"><div style="font-size:11px;color:#9C7F76;">Avg left</div><div style="font-size:15px;font-weight:800;color:#4A3436;">{{ pred.avgStr }}</div></div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;">
+                <input value="{{ predGoal }}" onChange="{{ onPredGoal }}" inputmode="decimal" placeholder="Vacation goal" style="flex:1;min-width:0;height:44px;background:#FBF3F1;border:none;border-radius:14px;padding:0 13px;color:#4A3436;font-size:14.5px;outline:none;"/>
+                <div style="min-width:112px;text-align:right;"><div style="font-size:11px;color:#9C7F76;">Paychecks</div><div style="font-size:15px;font-weight:800;color:#C97C93;">{{ pred.goalStr }}</div></div>
+              </div>
+            </div>
+            <sc-for list="{{ paychecks }}" as="p" hint-placeholder-count="3">
+              <div onClick="{{ p.onOpen }}" style="background:#FFFFFF;border-radius:20px;padding:16px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);position:relative;{{ p.ring }}">
+                <span style="position:absolute;top:12px;right:16px;font-size:12px;color:#F1B9C7;">✧</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <div><div style="font-size:17px;font-weight:800;color:#4A3436;">{{ p.dateStr }}</div><div style="font-size:12.5px;color:#9C7F76;">{{ p.windowStr }}</div></div>
+                  <div style="text-align:right;"><div style="font-size:12px;color:#9C7F76;">Income</div><div style="font-size:17px;font-weight:800;color:#8CA679;">{{ p.amountStr }}</div></div>
+                </div>
+                <div style="height:7px;border-radius:4px;background:#F5E7EA;overflow:hidden;margin:14px 0 12px;display:flex;">
+                  <div style="width:{{ p.billsPct }};background:#C97C93;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <div><div style="font-size:11.5px;color:#9C7F76;">Total</div><div style="font-size:14px;font-weight:700;">{{ p.amountStr }}</div></div>
+                  <div><div style="font-size:11.5px;color:#9C7F76;">Bills</div><div style="font-size:14px;font-weight:700;color:#C97C93;">{{ p.billsStr }}</div></div>
+                  <div><div style="font-size:11.5px;color:#9C7F76;">Left</div><div style="font-size:14px;font-weight:700;color:{{ p.leftColor }};">{{ p.leftStr }}</div></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyBills }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ billsList }}" as="it" hint-placeholder-count="5">
+              <div style="background:#FFFFFF;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <div style="width:40px;height:40px;border-radius:13px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ it.catFg }};flex:0 0 auto;">{{ it.icon }}</div>
+                <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;"><div style="{{ it.titleStyle }}">{{ it.title }}</div><div style="font-size:12.5px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div></div>
+                <div style="text-align:right;">
+                  <div style="{{ it.amountStyle }}">{{ it.amountStr }}</div>
+                  <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#fff;font-size:11px;font-weight:700;">✓</span></sc-if></button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyEvents }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ eventsList }}" as="it" hint-placeholder-count="3">
+              <div onClick="{{ it.onOpen }}" style="background:#FFFFFF;border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <div style="width:40px;height:40px;border-radius:13px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:17px;color:{{ it.catFg }};flex:0 0 auto;">{{ it.icon }}</div>
+                <div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:600;">{{ it.title }}</div><div style="font-size:12.5px;color:#9C7F76;">{{ it.metaStr }}</div></div>
+                <span style="font-size:14.5px;font-weight:700;">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMoneyHistory }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ paidHistory }}" as="it" hint-placeholder-count="4">
+              <div style="background:#FFFFFF;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                <span style="width:26px;height:26px;border-radius:50%;background:#8CA679;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex:0 0 auto;">✓</span>
+                <div style="flex:1;"><div style="font-size:14.5px;">{{ it.title }}</div><div style="font-size:12.5px;color:#9C7F76;">{{ it.metaStr }}</div></div>
+                <span style="font-size:14.5px;color:#9C7F76;font-weight:600;">{{ it.amountStr }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- CALENDAR -->
+    <sc-if value="{{ isCalendar }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;gap:8px;padding:2px 0 16px;">
+          <sc-for list="{{ calModes }}" as="m" hint-placeholder-count="3">
+            <button onClick="{{ m.onClick }}" style="{{ m.style }}">{{ m.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isCalMonth }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FFFFFF;border-radius:24px;padding:18px 14px;box-shadow:0 4px 14px rgba(201,124,144,.10);position:relative;">
+            <span style="position:absolute;top:14px;right:18px;font-size:13px;color:#E3B87C;">✧</span>
+            <div style="display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+              <button onClick="{{ onPrevMonth }}" style="background:none;border:none;color:#C97C93;font-size:22px;line-height:1;cursor:pointer;padding:0 12px;">‹</button><span style="font-size:17px;font-weight:800;color:#4A3436;flex:1;text-align:center;">{{ calTitle }}</span><button onClick="{{ onNextMonth }}" style="background:none;border:none;color:#C97C93;font-size:22px;line-height:1;cursor:pointer;padding:0 12px;">›</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:8px;">
+              <sc-for list="{{ weekdayLabels }}" as="w" hint-placeholder-count="7">
+                <div style="text-align:center;font-size:10.5px;font-weight:700;color:#9C7F76;text-transform:uppercase;">{{ w.l }}</div>
+              </sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:42px;gap:2px;">
+              <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="35">
+                <button onClick="{{ c.onClick }}" style="{{ c.style }}">
+                  <span style="{{ c.numStyle }}">{{ c.day }}</span>
+                  <div style="display:flex;gap:3px;height:5px;margin-top:3px;justify-content:center;align-items:center;">
+                    <sc-for list="{{ c.dots }}" as="d" hint-placeholder-count="2"><span style="width:4px;height:4px;border-radius:50%;background:{{ d.c }};"></span></sc-for>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:14px;padding-top:14px;border-top:1px solid #F5E7EA;">
+              <sc-for list="{{ calLegend }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:{{ l.c }};"></span><span style="font-size:11.5px;color:#9C7F76;">{{ l.label }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCalAgenda }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FFFFFF;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#9C7F76;line-height:1.5;box-shadow:0 4px 14px rgba(201,124,144,.10);">{{ agendaNote }}</div>
+        </sc-if>
+
+        <div style="margin-top:18px;">
+          <div style="font-size:16px;font-weight:800;color:#4A3436;margin:0 4px 10px;">{{ selectedDateStr }}</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <sc-if value="{{ dayHasItems }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ dayItems }}" as="it" hint-placeholder-count="3">
+                <div onClick="{{ it.onOpen }}" style="background:#FFFFFF;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+                  <div style="width:36px;height:36px;border-radius:12px;background:{{ it.catBg }};display:flex;align-items:center;justify-content:center;font-size:15px;color:{{ it.catFg }};flex:0 0 auto;">{{ it.icon }}</div>
+                  <div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:600;">{{ it.title }}</div><div style="font-size:12.5px;color:#9C7F76;">{{ it.typeLabel }}</div></div>
+                  <span style="font-size:13px;color:#9C7F76;font-weight:600;">{{ it.right }}</span>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ dayEmpty }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#FFFFFF;border-radius:16px;padding:26px 16px;text-align:center;color:#9C7F76;font-size:13.5px;box-shadow:0 4px 14px rgba(201,124,144,.10);">Nothing scheduled. Tap + to add.</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    
+
+  </div>
+
+  <!-- FLOATING NAV -->
+  <div style="position:absolute;left:18px;right:18px;bottom:calc(16px + env(safe-area-inset-bottom));height:64px;background:#FFFFFF;border-radius:32px;display:flex;align-items:center;padding:6px;box-shadow:0 14px 30px rgba(201,124,144,.22);">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+      <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+        <span style="font-size:17px;line-height:1;">{{ t.icon }}</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PAYCHECK DETAIL OVERLAY ============ -->
+<sc-if value="{{ showPaycheckOv }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:transparent;display:flex;flex-direction:column;z-index:20;">
+  <div style="height:0;"></div>
+  <div style="flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 20px 12px;">
+    <button onClick="{{ closeOverlay }}" style="background:#FFFFFF;border:none;border-radius:12px;padding:9px 14px;color:#C97C93;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.12);">‹ Back</button>
+    <button onClick="{{ onQuickAdd }}" style="background:#FFFFFF;border:none;border-radius:12px;padding:9px 14px;color:#C97C93;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.12);">Add bill</button>
+  </div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 20px 40px;">
+    <h1 style="font-size:26px;font-weight:800;margin:4px 4px 2px;color:#4A3436;">{{ ovPc.dateStr }}</h1>
+    <p style="font-size:14px;color:#9C7F76;margin:0 4px 18px;">{{ ovPc.windowStr }}</p>
+    <div style="background:linear-gradient(150deg,#F1B9C7,#D98CA0);border-radius:22px;padding:18px;margin-bottom:18px;box-shadow:0 14px 26px rgba(201,124,144,.25);">
+      <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:30px;font-weight:800;color:#fff;">{{ ovPc.leftStr }}</span><span style="font-size:13px;color:rgba(255,255,255,.8);">left this window</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px;">
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Total</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.amountStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Bills</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.billsStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Left</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.leftStr }}</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,.75);">Due</div><div style="font-size:15px;font-weight:700;color:#fff;">{{ ovPc.billCountStr }}</div></div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:800;color:#4A3436;margin:0 4px 10px;">Assigned items</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{ ovPc.items }}" as="it" hint-placeholder-count="4">
+        <div style="background:#FFFFFF;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+          <button onClick="{{ it.onToggle }}" style="{{ it.checkStyle }}"><sc-if value="{{ it.paid }}" hint-placeholder-val="{{ true }}"><span style="color:#fff;font-size:11px;font-weight:700;">✓</span></sc-if></button>
+          <div onClick="{{ it.onOpen }}" style="flex:1;min-width:0;cursor:pointer;"><div style="{{ it.titleStyle }}">{{ it.title }}</div><div style="font-size:12.5px;color:{{ it.metaColor }};margin-top:1px;">{{ it.metaStr }}</div></div>
+          <span style="{{ it.amountStyle }}">{{ it.amountStr }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ADD/EDIT MODAL ============ -->
+<sc-if value="{{ showModal }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:rgba(74,52,54,0.35);display:flex;flex-direction:column;justify-content:flex-end;z-index:40;">
+  <div onClick="{{ closeModal }}" style="flex:1;"></div>
+  <div style="background:#FBF3F1;border-radius:26px 26px 0 0;padding:8px 20px calc(24px + env(safe-area-inset-bottom));max-height:88%;overflow-y:auto;" class="fc-scroll">
+    <div style="width:38px;height:5px;border-radius:3px;background:#E7C9CC;margin:6px auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <button onClick="{{ closeModal }}" style="background:none;border:none;color:#9C7F76;font-size:15px;cursor:pointer;">Cancel</button>
+      <span style="font-size:15.5px;font-weight:800;color:#4A3436;">{{ modalTitle }}</span>
+      <button onClick="{{ saveModal }}" style="background:none;border:none;color:#C97C93;font-size:15px;font-weight:700;cursor:pointer;">Save</button>
+    </div>
+    <div style="font-size:11px;color:#9C7F76;text-transform:uppercase;letter-spacing:.5px;margin:0 2px 8px;">Type</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;" class="fc-scroll">
+      <sc-for list="{{ modalTypes }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+      </sc-for>
+    </div>
+    <input value="{{ draftTitle }}" onChange="{{ onDraftTitle }}" placeholder="{{ ph1 }}" style="width:100%;background:#FFFFFF;border:none;border-radius:14px;padding:15px;color:#4A3436;font-size:15px;outline:none;margin-bottom:10px;"/>
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <input value="{{ draftAmount }}" onChange="{{ onDraftAmount }}" placeholder="{{ ph2 }}" inputmode="decimal" style="flex:1;background:#FFFFFF;border:none;border-radius:14px;padding:15px;color:#4A3436;font-size:15px;outline:none;"/>
+      <input value="{{ draftDate }}" onChange="{{ onDraftDate }}" placeholder="{{ ph3 }}" style="flex:1;background:#FFFFFF;border:none;border-radius:14px;padding:15px;color:#4A3436;font-size:15px;outline:none;"/>
+    </div>
+    <textarea value="{{ draftNote }}" onChange="{{ onDraftNote }}" placeholder="{{ ph4 }}" style="width:100%;height:74px;background:#FFFFFF;border:none;border-radius:14px;padding:15px;color:#4A3436;font-size:15px;outline:none;resize:none;margin-bottom:14px;"></textarea>
+    <div style="background:#FFFFFF;border-radius:14px;overflow:hidden;">
+      <button onClick="{{ onCycleRepeat }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid #F5E7EA;cursor:pointer;color:#4A3436;"><span style="font-size:14.5px;">Repeat</span><span style="font-size:14.5px;color:#9C7F76;">{{ draftRepeatLabel }} ›</span></button>
+      <button onClick="{{ onCycleReminder }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;border-bottom:1px solid #F5E7EA;cursor:pointer;color:#4A3436;"><span style="font-size:14.5px;">Reminder</span><span style="font-size:14.5px;color:#9C7F76;">{{ draftReminderLabel }} ›</span></button>
+      <button onClick="{{ onCyclePaycheck }}" style="width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:14px 15px;cursor:pointer;color:#4A3436;"><span style="font-size:14.5px;">Assign to paycheck</span><span style="font-size:14.5px;color:#C97C93;">{{ draftPaycheckLabel }} ›</span></button>
+    </div>
+    <sc-if value="{{ canDelete }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ onDeleteDraft }}" style="margin-top:14px;width:100%;height:50px;border:none;border-radius:14px;background:#FBE4E4;color:#C0605A;font-size:15px;font-weight:700;cursor:pointer;">Delete</button>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ SETTINGS ============ -->
+<sc-if value="{{ showSettings }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;inset:0;background:transparent;display:flex;flex-direction:column;z-index:30;">
+  <div style="height:0;"></div>
+  <div style="flex:0 0 auto;padding:8px 20px 8px;"><button onClick="{{ closeSettings }}" style="background:#FFFFFF;border:none;border-radius:12px;padding:9px 14px;color:#C97C93;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.12);">‹ Done</button></div>
+  <div class="fc-scroll" style="flex:1;overflow-y:auto;padding:0 20px 40px;">
+    <h1 style="font-size:26px;font-weight:800;margin:6px 4px 18px;color:#4A3436;">Settings</h1>
+    <div style="font-size:12px;font-weight:800;color:#9C7F76;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 8px;">Reminder lead time</div>
+    <div style="background:#FFFFFF;border-radius:16px;overflow:hidden;margin-bottom:22px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+      <sc-for list="{{ remindLeadOptions }}" as="r" hint-placeholder-count="4">
+        <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #F5E7EA;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#4A3436;"><span style="font-size:14.5px;">{{ r.label }}</span><div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div></button>
+      </sc-for>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#9C7F76;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 8px;">Remind me about</div>
+    <div style="background:#FFFFFF;border-radius:16px;overflow:hidden;margin-bottom:22px;box-shadow:0 4px 14px rgba(201,124,144,.10);">
+      <sc-for list="{{ reminderTypeRows }}" as="r" hint-placeholder-count="5">
+        <button onClick="{{ r.onClick }}" style="width:100%;background:none;border:none;border-bottom:1px solid #F5E7EA;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;color:#4A3436;"><span style="font-size:14.5px;">{{ r.label }}</span><div style="{{ r.track }}"><div style="{{ r.knob }}"></div></div></button>
+      </sc-for>
+    </div>
+    <button onClick="{{ onRestart }}" style="width:100%;background:#FFFFFF;border:none;border-radius:16px;padding:15px;color:#C0605A;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);margin-bottom:10px;">Replay onboarding</button>
+    <button onClick="{{ onExportLegacy }}" style="width:100%;background:#FFFFFF;border:none;border-radius:16px;padding:15px;color:#C97C93;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);margin-bottom:10px;">Export data backup</button>
+    <button onClick="{{ onClearData }}" style="width:100%;background:#FBE4E4;border:none;border-radius:16px;padding:15px;color:#C0605A;font-size:15px;font-weight:700;cursor:pointer;">Clear all data &amp; start fresh</button>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</template>
+
+<script>
+(function(){
+'use strict';
+
+/* ===========================================================================
+   Minimal Claude Design Component (.dc) runtime
+   Implements just enough of the template engine to run this component
+   standalone: {{ expr }} interpolation, <sc-if>, <sc-for>, onClick/onChange
+   event binding, dynamic style (string or object), and value binding.
+   =========================================================================== */
+
+// Resolve a dotted path ("a.b.c") against a context object (prototype-aware).
+function resolve(path, ctx){
+  var parts = path.trim().split('.');
+  var v = ctx;
+  for (var i = 0; i < parts.length; i++){
+    if (v == null) return undefined;
+    v = v[parts[i]];
+  }
+  return v;
+}
+
+// Strip the {{ }} delimiters from a single-expression attribute value.
+function stripTpl(s){
+  return (s || '').trim().replace(/^\{\{\s*/, '').replace(/\s*\}\}$/, '');
+}
+
+// Interpolate every {{ path }} occurrence inside a string.
+function interp(str, ctx){
+  return str.replace(/\{\{\s*([\w.]+)\s*\}\}/g, function(_m, p){
+    var v = resolve(p, ctx);
+    return v != null ? v : '';
+  });
+}
+
+// Apply a style value that may be a CSS string or a JS style object.
+function applyStyle(el, val){
+  if (typeof val === 'string') el.setAttribute('style', val);
+  else if (val && typeof val === 'object') Object.assign(el.style, val);
+}
+
+// True when the whole attribute value is a single {{ path }} expression.
+var SINGLE = /^\{\{\s*[\w.]+\s*\}\}$/;
+
+// Recursively process a template node against a context, returning live DOM.
+function proc(node, ctx){
+  // Text node — interpolate if it contains a template expression.
+  if (node.nodeType === 3){
+    var t = node.textContent;
+    return document.createTextNode(t.indexOf('{{') >= 0 ? interp(t, ctx) : t);
+  }
+  if (node.nodeType !== 1) return null;
+
+  var tag = node.tagName.toLowerCase();
+
+  // <sc-if value="{{ cond }}"> — conditional render.
+  if (tag === 'sc-if'){
+    if (!resolve(stripTpl(node.getAttribute('value')), ctx)){
+      return document.createDocumentFragment();
+    }
+    var fIf = document.createDocumentFragment();
+    for (var i = 0; i < node.childNodes.length; i++){
+      var rIf = proc(node.childNodes[i], ctx);
+      if (rIf) fIf.appendChild(rIf);
+    }
+    return fIf;
+  }
+
+  // <sc-for list="{{ arr }}" as="item"> — list render with scoped context.
+  if (tag === 'sc-for'){
+    var list = resolve(stripTpl(node.getAttribute('list')), ctx);
+    var as_ = node.getAttribute('as') || 'item';
+    var fFor = document.createDocumentFragment();
+    if (Array.isArray(list)){
+      for (var k = 0; k < list.length; k++){
+        var ic = Object.create(ctx);     // child scope shadows outer ctx
+        ic[as_] = list[k];
+        for (var j = 0; j < node.childNodes.length; j++){
+          var rFor = proc(node.childNodes[j], ic);
+          if (rFor) fFor.appendChild(rFor);
+        }
+      }
+    }
+    return fFor;
+  }
+
+  // Regular element.
+  var el = document.createElement(tag);
+  var pendingVal;
+  for (var a = 0; a < node.attributes.length; a++){
+    var attr = node.attributes[a];
+    var n = attr.name, v = attr.value;
+
+    if (n.indexOf('hint-') === 0) continue;          // design-only hints
+
+    // Static attribute (no template) — copy through, skip literal handlers.
+    if (v.indexOf('{{') < 0){
+      if (!/^on[A-Za-z]/.test(n)) el.setAttribute(n, v);
+      continue;
+    }
+
+    var single = SINGLE.test(v.trim());
+    var resolved = single ? resolve(stripTpl(v), ctx) : null;
+    var ln = n.toLowerCase();
+
+    // Event handlers: onClick -> click, onChange -> change (fires on blur,
+    // which avoids tearing down focused inputs on every keystroke).
+    if (ln.indexOf('on') === 0){
+      var evs = (ln === 'onchange') ? ['change'] : [ln.slice(2)];
+      if (typeof resolved === 'function'){
+        for (var e = 0; e < evs.length; e++) el.addEventListener(evs[e], resolved);
+      }
+      continue;
+    }
+
+    if (n === 'style'){ applyStyle(el, single ? resolved : interp(v, ctx)); continue; }
+    if (n === 'value' && single){ pendingVal = resolved; continue; }
+
+    var val = single ? resolved : interp(v, ctx);
+    if (val != null) el.setAttribute(n, String(val));
+  }
+
+  for (var c = 0; c < node.childNodes.length; c++){
+    var rc = proc(node.childNodes[c], ctx);
+    if (rc) el.appendChild(rc);
+  }
+
+  // Inputs/textareas need their value set as a property, not an attribute.
+  if (pendingVal != null) el.value = String(pendingVal);
+  return el;
+}
+
+/* ===========================================================================
+   DCLogic base class — state + batched re-render lifecycle.
+   =========================================================================== */
+class DCLogic {
+  constructor(){ this._pend = false; }
+
+  setState(u){
+    var next = (typeof u === 'function') ? u(this.state) : u;
+    this.state = Object.assign({}, this.state, next);
+    if (!this._pend){
+      this._pend = true;
+      requestAnimationFrame(function(self){ return function(){ self._pend = false; self._render(); }; }(this));
+    }
+  }
+
+  _render(){
+    var vals = this.renderVals();
+    var clone = this._tmpl.content.cloneNode(true);
+    var f = document.createDocumentFragment();
+    for (var i = 0; i < clone.childNodes.length; i++){
+      var r = proc(clone.childNodes[i], vals);
+      if (r) f.appendChild(r);
+    }
+    this._root.textContent = '';
+    this._root.appendChild(f);
+  }
+}
+
+
+
+/* ======================= component (aurora, trimmed) ======================= */
+class Component extends DCLogic {
+  state = this.build();
+
+  makeSparkles(){
+    let seed=7;
+    const rand=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+    const out=[];
+    for(let i=0;i<147;i++){
+      const x=(rand()*100).toFixed(1);
+      const y=(rand()*100).toFixed(1);
+      const size=Math.round(9+rand()*13);
+      const op=(0.55+rand()*0.4).toFixed(2);
+      const dur=(2.6+rand()*2.4).toFixed(2);
+      const delay=(rand()*2.2).toFixed(2);
+      const chr=rand()>0.5?'✦':'✧';
+      out.push({id:'sp'+i,chr,style:`position:absolute;left:${x}%;top:${y}%;font-size:${size}px;color:#FFFFFF;opacity:${op};animation:fcTwinkle ${dur}s ease-in-out infinite ${delay}s;text-shadow:0 0 6px rgba(255,255,255,.6);`});
+    }
+    return out;
+  }
+
+  // ---- persistence ----
+  _DKEYS = ['items','paychecks','payday','remindLead','remindTypes','homeView','onboarded'];
+  _cloudTimer = null;
+  _snapshot(){ const o={}; this._DKEYS.forEach(k=>o[k]=this.state[k]); return o; }
+  _load(){ try{ const r=localStorage.getItem('auroraCalendar.v1'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+  _persist(){ try{ const o=this._snapshot(); localStorage.setItem('auroraCalendar.v1', JSON.stringify(o)); this._queueCloudSave(o); }catch(e){} }
+  _queueCloudSave(o){ if(!window.fetch) return; clearTimeout(this._cloudTimer); this._cloudTimer=setTimeout(()=>this._saveCloud(o),700); }
+  async _saveCloud(o){ try{ await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:o})}); }catch(e){} }
+  async _loadCloud(){ try{ if(!window.fetch) return; const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok) return; const payload=await r.json(); const data=payload&&payload.data; if(!data||typeof data!=='object'){ await this._saveCloud(this._snapshot()); return; } const next={}; this._DKEYS.forEach(k=>{ if(data[k]!==undefined) next[k]=data[k]; }); if(Object.keys(next).length){ this.state=Object.assign({},this.state,next); try{localStorage.setItem('auroraCalendar.v1',JSON.stringify(this._snapshot()));}catch(e){} this._render(); } }catch(e){} }
+  exportLegacyData(){ try{ const payload={exportedAt:new Date().toISOString(),source:'auroraCalendar.v1',data:this._snapshot()}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='aurora-calendar-legacy-export.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); }catch(e){ alert('Could not export data.'); } }
+  clearAll(){ try{ localStorage.removeItem('auroraCalendar.v1'); }catch(e){} this._saveCloud({items:[],paychecks:[],payday:{date:'',amount:'',freq:'biweekly',vary:false},remindLead:{d1:true,d3:true,d7:false,custom:false},remindTypes:{bill:true,appt:true,pay:false},homeView:'today',onboarded:false}).finally(()=>location.reload()); }
+  setState(u){ super.setState(u); this._persist(); }
+
+  build() {
+    const items = [];
+    const paychecks = [];
+    const payday = {date:'',amount:'',freq:'biweekly',vary:false};
+    const DEFAULT_NOTE = '';
+
+    const seed = {items,paychecks,payday,
+      remindLead:{d1:true,d3:true,d7:false,custom:false}, remindTypes:{bill:true,appt:true,pay:false},
+      homeView:'today', onboarded:false};
+
+    const saved = this._load();
+    const data = saved ? {
+      items:saved.items||items, paychecks:saved.paychecks||paychecks, payday:saved.payday||payday,
+      remindLead:saved.remindLead||seed.remindLead, remindTypes:saved.remindTypes||seed.remindTypes,
+      homeView:saved.homeView||'today', onboarded:!!saved.onboarded,
+    } : seed;
+    const badPaychecks=(data.paychecks||[]).some(p=>!this.validIso(p.date)||!this.validIso(p.start)||!this.validIso(p.end));
+    const needsAssignment=(data.items||[]).some(i=>i.dueDate&&i.amount&&!i.pc);
+    if(data.onboarded&&(badPaychecks||(!data.paychecks.length&&data.payday&&data.payday.date))){
+      data.payday={...data.payday,date:this.coerceDate(data.payday.date)};
+      data.paychecks=this.generatePaychecks(data.payday);
+      data.items=this.assignPc(data.items,data.paychecks);
+    } else if(data.onboarded&&data.paychecks.length&&needsAssignment){
+      data.items=this.assignPc(data.items,data.paychecks);
+    }
+
+    const parsed = this.parseNote(DEFAULT_NOTE);
+    const parsedSel = {}; parsed.forEach(p=>parsedSel[p._i]=true);
+    const now = new Date();
+    const homeTab = data.homeView==='paycheck'?'money':(data.homeView==='calendar'?'calendar':'today');
+
+    const transient = {
+      sparkles:this.makeSparkles(),
+      obStep:1, obMethod:'paste', pasteText:DEFAULT_NOTE, parsed, parsedSel,
+      tab:homeTab, moneySub:'paychecks',
+      calMode:'month', calYear:now.getFullYear(), calMonth0:now.getMonth(),
+      selectedDate:this.iso(now), predictGoal:'',
+      overlay:null, modal:null, draft:null, settings:false, info:null, DEFAULT_NOTE,
+    };
+    return {...transient, ...data, phase: data.onboarded?'app':'onboarding'};
+  }
+
+  // ---- date helpers ----
+  pad(n){ return String(n).padStart(2,'0'); }
+  iso(d){ return d.getFullYear()+'-'+this.pad(d.getMonth()+1)+'-'+this.pad(d.getDate()); }
+  today(){ return this.iso(new Date()); }
+  todayStr(){ return new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}); }
+  addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return this.iso(d); }
+  normDate(s){ if(!s) return null; const m=String(s).match(/(\d{1,2})\/(\d{1,2})/); if(!m) return null; const y=new Date().getFullYear(); return y+'-'+this.pad(m[1])+'-'+this.pad(m[2]); }
+  validIso(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s||''))) return false; const d=new Date(s+'T00:00:00'); return !isNaN(d.getTime())&&this.iso(d)===s; }
+  coerceDate(s){ if(this.validIso(s)) return s; return this.normDate(s)||this.today(); }
+
+  // ---- display helpers ----
+  money(n){ if(n==null||isNaN(n)) return ''; return '$'+Number(n).toLocaleString('en-US'); }
+  md(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+  wd(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
+  daysUntil(iso){ if(!iso) return 999; return Math.round((new Date(iso+'T00:00:00')-new Date(this.today()+'T00:00:00'))/86400000); }
+  catColor(c){ return ({housing:'#C97C93',utilities:'#8B6FA0',medical:'#5C9AA6',auto:'#B98F3E',groceries:'#5B7A4A',family:'#D98CA0'})[c]||'#C97C93'; }
+  catBg(c){ return ({housing:'#F8DCE3',utilities:'#ECE0F0',medical:'#DCEAEC',auto:'#F6ECD6',groceries:'#E3ECE0',family:'#F8DCE3'})[c]||'#F8DCE3'; }
+  catFg(c){ return ({housing:'#C97C93',utilities:'#8B6FA0',medical:'#4A8A96',auto:'#B98F3E',groceries:'#5B7A4A',family:'#C97C93'})[c]||'#C97C93'; }
+  catIcon(c){ return ({housing:'⌂',utilities:'✦',medical:'✚',auto:'⟡',groceries:'❦',family:'❀'})[c]||'✦'; }
+  defaultCat(t){ return ({bill:'utilities',event:'family',appointment:'medical',task:'family'})[t]||'family'; }
+
+  chkStyle(paid){ const b={width:'24px',height:'24px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',flex:'0 0 auto',cursor:'pointer',border:'2px solid #F1DEE2',background:'#fff',padding:'0',marginTop:'4px'}; return paid?{...b,border:'2px solid #8CA679',background:'#8CA679'}:b; }
+  titleStyle(paid){ return paid?{fontSize:'14.5px',fontWeight:'600',textDecoration:'line-through',color:'#9C7F76'}:{fontSize:'14.5px',fontWeight:'600',color:'#4A3436'}; }
+  amtStyle(paid){ return {fontSize:'14.5px',fontWeight:'700',color:paid?'#9C7F76':'#4A3436'}; }
+  metaColor(it){ if(it.paid) return '#9C7F76'; const d=this.daysUntil(it.dueDate); return d<=3?'#C08A4A':'#9C7F76'; }
+  billMeta(it){ if(it.paid) return 'Paid '+this.md(it.paidDate||it.dueDate); if(!it.dueDate) return ''; const d=this.daysUntil(it.dueDate); return d<0?'Overdue':(d===0?'Due today':(d===1?'Due tomorrow':'Due '+this.md(it.dueDate))); }
+
+  chkVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,amountStr:this.money(it.amount),metaStr:this.billMeta(it),metaColor:this.metaColor(it),checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),amountStyle:this.amtStyle(paid),icon:this.catIcon(it.category),catBg:this.catBg(it.category),catFg:this.catFg(it.category),onToggle:()=>this.togglePaid(it.id),onOpen:()=>this.openModal(it.id)}; }
+  taskVm(it){ const paid=!!it.paid; return {id:it.id,title:it.title,paid,checkStyle:this.chkStyle(paid),titleStyle:this.titleStyle(paid),onToggle:()=>this.togglePaid(it.id)}; }
+  pcCalc(pc){ const its=this.state.items.filter(i=>i.pc===pc.id&&i.amount); const bills=its.reduce((s,i)=>s+i.amount,0); const paid=its.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0); const unpaid=bills-paid; const left=pc.amount-bills; const uc=its.filter(i=>!i.paid).length; const pcnt=its.filter(i=>i.paid).length; return {planned:bills,bills,paid,unpaid,left,uc,pcnt,its}; }
+
+  // ---- paycheck scheduling ----
+  generatePaychecks(payday){
+    const freq=payday.freq||'biweekly'; const amount=+payday.amount||0; const base=this.coerceDate(payday.date); const out=[];
+    const step = freq==='weekly'?7:(freq==='twicemonthly'?15:14);
+    let explicit=[...(payday.dates||[])].map(d=>this.coerceDate(d)).filter(d=>this.validIso(d)).sort().filter((d,i,a)=>i===0||d!==a[i-1]);
+    if(explicit.length){
+      while(explicit.length<12){ explicit.push(this.addDays(explicit[explicit.length-1],step)); }
+      for(let i=0;i<explicit.length;i++){ const start=explicit[i]; const end=explicit[i+1]?this.addDays(explicit[i+1],-1):this.addDays(start,step-1); out.push({id:'pc_'+start,date:start,amount,start,end}); }
+      return out;
+    }
+    if(freq==='monthly'){
+      let d=new Date(base+'T00:00:00'); d.setMonth(d.getMonth()-1);
+      for(let i=0;i<10;i++){ const start=this.iso(d); const e=new Date(d); e.setMonth(e.getMonth()+1); e.setDate(e.getDate()-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setMonth(d.getMonth()+1); }
+    } else {
+      let d=new Date(base+'T00:00:00'); d.setDate(d.getDate()-step);
+      for(let i=0;i<12;i++){ const start=this.iso(d); const e=new Date(d); e.setDate(e.getDate()+step-1); out.push({id:'pc_'+start,date:start,amount,start,end:this.iso(e)}); d.setDate(d.getDate()+step); }
+    }
+    return out;
+  }
+  assignPc(items,paychecks){ return items.map(i=>{ if(!i.dueDate) return {...i,pc:(i.pc&&paychecks.find(p=>p.id===i.pc))?i.pc:null}; const w=paychecks.find(p=>i.dueDate>=p.start&&i.dueDate<=p.end); return {...i,pc:w?w.id:null}; }); }
+  planningPaycheck(){ const t=this.today(); const fut=this.state.paychecks.filter(p=>p.end>=t).sort((a,b)=>a.start.localeCompare(b.start)); const withItems=fut.find(p=>this.state.items.some(i=>i.pc===p.id&&i.amount)); return withItems||fut[0]||this.state.paychecks[this.state.paychecks.length-1]||null; }
+
+  paydayFromNote(text){
+    const src=String(text||'');
+    const m=src.match(/\bPAYDAYS?\b([\s\S]*?)(?=\b(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\b|$)/i);
+    if(!m) return null;
+    const dates=[...m[1].matchAll(/\b\d{1,2}\/\d{1,2}\b/g)].map(x=>this.normDate(x[0])).filter(Boolean);
+    if(!dates.length) return null;
+    const today=this.today();
+    const date=dates.find(d=>d>=today)||dates[0];
+    const am=m[1].match(/(?:^|\s)(\$?\s*[0-9][0-9,]*(?:\.\d{2})?)(?=\s|$)/);
+    const amount=am?+am[1].replace(/[$,\s]/g,''):null;
+    return {date,dates,amount,freq:'biweekly',vary:false};
+  }
+
+  parseNote(text){
+    const amtRe=/\$\s*([0-9][0-9,]*(?:\.\d{1,2})?)/;
+    const dateRe=/\b(\d{1,2})\/(\d{1,2})\b/;
+    const monthNames=/^(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)s?$/i;
+    const normalized=String(text||'')
+      .replace(/\r/g,'\n')
+      .replace(/[ \t]+/g,' ')
+      .replace(/(\b\d{1,2}\/\d{1,2})\s+(?=\$)/g,'$1~')
+      .replace(/\s+(?=\d{1,2}\/\d{1,2}~\$)/g,'\n')
+      .replace(/\s+(?=\$)/g,'\n')
+      .replace(/~/g,' ')
+      .replace(/\s+(?=\d{1,2}\/\d{1,2}\s+PAYDAY\b)/gi,'\n');
+    const records=normalized.split('\n').map(l=>l.trim()).filter(Boolean);
+    const out=[]; let lastDate=null;
+    const cleanTitle=(line)=>{
+      return line
+        .replace(amtRe,'')
+        .replace(/\s*-\s*scheduled\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\bscheduled\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\s*-\s*scheduled\b/ig,'')
+        .replace(/\bscheduled\b/ig,'')
+        .replace(/\bpaid\s+\d{1,2}\/\d{1,2}\b/ig,'')
+        .replace(/\bpaid\b/ig,'')
+        .replace(dateRe,'')
+        .replace(/\u2705/g,'')
+        .replace(/\s*[-:]\s*$/,'')
+        .replace(/\s{2,}/g,' ')
+        .trim();
+    };
+    records.forEach((line)=>{
+      const low=line.toLowerCase();
+      const dm=line.match(/^(\d{1,2}\/\d{1,2})\b/);
+      if(dm) lastDate=dm[0];
+      const date=dm?dm[0]:lastDate;
+      if(monthNames.test(line)||low.startsWith('paydays')||(/\bpayday\b/i.test(line)&&!amtRe.test(line))) return;
+
+      const hasPaid=/\u2705|\bpaid\b/i.test(line);
+      const am=line.match(amtRe);
+      let type='unknown',title=line,amount=null;
+      if(am){
+        amount=+am[1].replace(/,/g,'');
+        title=cleanTitle(line);
+        type=(low.includes('dentist')||low.includes('doctor')||low.includes('appointment'))?'event':'bill';
+      }
+      else if(low.includes('paycheck')){type='paycheck';title='Paycheck';}
+      else if(low.startsWith('check')||low.startsWith('call')||low.startsWith('look')||low.includes('signup')){type='task';title=cleanTitle(line)||line.replace(/\u2705/g,'').trim();}
+
+      if(type==='unknown'||!title) return;
+      out.push({type,title,amount,date,paid:hasPaid,raw:line,_i:out.length});
+    });
+    return out;
+  }
+
+  // ---- actions ----
+  togglePaid(id){ this.setState(s=>({items:s.items.map(i=>i.id===id?{...i,paid:!i.paid,paidDate:!i.paid?this.today():null}:i)})); }
+  go(tab){ this.setState({tab,overlay:null,settings:false}); }
+  openOverlay(kind,id){ this.setState({overlay:{kind,id}}); }
+  closeOverlay(){ this.setState({overlay:null}); }
+  openModal(id){ const it=id?this.state.items.find(i=>i.id===id):null; const pc=this.planningPaycheck(); this.setState({modal:true,draft:it?{...it,repeat:it.repeat||'None',reminder:it.reminder||'3 days before'}:{type:'bill',title:'',amount:'',dueDate:'',note:'',repeat:'None',reminder:'3 days before',pc:pc?pc.id:null}}); }
+  closeModal(){ this.setState({modal:null,draft:null}); }
+
+  saveModal(){
+    const d=this.state.draft; if(!d){ this.setState({modal:null}); return; }
+    const t=d.type; const id=d.id;
+    const amt=(d.amount!==''&&d.amount!=null&&!isNaN(+d.amount))?+d.amount:null;
+    if(t==='paycheck'){ const pd={...this.state.payday,date:d.dueDate||this.state.payday.date,amount:amt||this.state.payday.amount}; const pcs=this.generatePaychecks(pd); const items=this.assignPc(this.state.items,pcs); this.setState({payday:pd,paychecks:pcs,items,modal:null,draft:null}); return; }
+    const pcs=this.state.paychecks; let pc=(t==='bill'||t==='event')?(d.pc||null):null;
+    if((t==='bill'||t==='event')&&!pc&&d.dueDate){ const w=pcs.find(p=>d.dueDate>=p.start&&d.dueDate<=p.end); pc=w?w.id:null; }
+    const base={type:t,title:d.title||'Untitled',amount:amt,dueDate:d.dueDate||'',note:d.note||'',category:d.category||this.defaultCat(t),time:d.time||'',repeat:d.repeat||'None',reminder:d.reminder||'',pc};
+    if(id){ this.setState(s=>({items:s.items.map(i=>i.id===id?{...i,...base}:i),modal:null,draft:null})); }
+    else { this.setState(s=>({items:[...s.items,{...base,id:'n'+Date.now(),paid:false}],modal:null,draft:null})); }
+  }
+  onDeleteDraft(){ const d=this.state.draft; if(!d||!d.id){ this.setState({modal:null,draft:null}); return; } const id=d.id; this.setState(s=>({items:s.items.filter(x=>x.id!==id),modal:null,draft:null})); }
+
+  openSettings(){ this.setState({settings:true}); }
+  closeSettings(){ this.setState({settings:false}); }
+
+  pickFile(){ const inp=document.createElement('input'); inp.type='file'; inp.accept='.txt,.md,text/plain,text/markdown'; inp.onchange=()=>{ const f=inp.files&&inp.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ const text=String(rd.result||''); const parsed=this.parseNote(text); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(text); this.setState({pasteText:text,parsed,parsedSel:sel,payday:pd?{...this.state.payday,...pd}:this.state.payday,obMethod:'paste',obStep:2.5}); }; rd.readAsText(f); }; inp.click(); }
+
+  importParsed(){
+    const s=this.state; const sel=s.parsedSel||{}; const parsed=(s.parsed||[]).filter(p=>sel[p._i]!==false&&p.type!=='unknown'&&p.type!=='paycheck');
+    const has=(arr,t)=>arr.some(x=>(x.title||'').toLowerCase()===t.toLowerCase());
+    const newItems=[]; let seq=0;
+    parsed.forEach(p=>{ const uid=()=>'imp'+Date.now()+(seq++);
+      if(p.type==='bill'||p.type==='event'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:p.type==='event'?'event':'bill',title:p.title,amount:p.amount??null,dueDate:this.normDate(p.date),paid:!!p.paid,paidDate:p.paid?this.today():null,category:p.type==='event'?'family':'utilities',pc:null}); }
+      else if(p.type==='paid'){ if(p.title&&!has(s.items,p.title)) newItems.push({id:uid(),type:'bill',title:p.title,amount:p.amount??null,dueDate:null,paid:true,paidDate:this.today(),category:'utilities',pc:null}); }
+      else if(p.type==='task'){ if(!has(s.items,p.title)) newItems.push({id:uid(),type:'task',title:p.title,paid:false,category:'family'}); }
+    });
+    if(newItems.length) this.setState(st=>({items:[...st.items,...newItems]}));
+  }
+
+  finishOnboarding(){ const s=this.state; const pd=this.paydayFromNote(s.pasteText)||s.payday; const fixedPd={...pd,date:this.coerceDate(pd.date)}; const pcs=this.generatePaychecks(fixedPd); const items=this.assignPc(s.items,pcs); const tab=s.homeView==='paycheck'?'money':(s.homeView==='calendar'?'calendar':'today'); this.setState({payday:fixedPd,paychecks:pcs,items,onboarded:true,phase:'app',tab,moneySub:'paychecks',obStep:1}); }
+
+  obNext(){ const s=this.state; if(s.phase!=='onboarding') return; const step=s.obStep;
+    if(step===2){
+      if(s.obMethod==='paste'){ this.setState({obStep:2.5}); return; }
+      if(s.obMethod==='upload'){ this.pickFile(); return; }
+      this.setState({parsed:[],parsedSel:{},obStep:3}); return;
+    }
+    if(step===2.5){ const parsed=this.parseNote(s.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(s.pasteText); this.setState({parsed,parsedSel:sel,payday:pd?{...s.payday,...pd}:s.payday,obStep:3}); return; }
+    if(step===4){ this.importParsed(); this.setState({obStep:5}); return; }
+    if(step>=6){ this.finishOnboarding(); return; }
+    this.setState({obStep:step+1});
+  }
+  obBack(){ const s=this.state; if(s.obStep===2.5){this.setState({obStep:2});return;} if(s.obStep===3&&s.obMethod==='paste'){this.setState({obStep:2.5});return;} this.setState({obStep:Math.max(1,Math.floor(s.obStep)-1)}); }
+
+  renderVals(){
+    const S=this.state;
+    const isOnboarding=S.phase==='onboarding';
+    const isApp=S.phase==='app';
+    const step=S.obStep;
+    const dotN=Math.min(6,Math.round(step));
+    const obDots=[1,2,3,4,5,6].map(i=>({bg:i<=dotN?'#C97C93':'#F1DEE2'}));
+    const v={ isOnboarding, isApp, sparkles:S.sparkles, todayStr:this.todayStr(), obDots,
+      isOb1:step===1, isOb2:step===2, isOb2b:step===2.5, isOb3:step===3, isOb4:step===4, isOb5:step===5, isOb6:step===6,
+      obCanBack:step>1, obNext:()=>this.obNext(), obBack:()=>this.obBack(),
+      obNextLabel: step===6?'Open Calendar':(step===4?'Save these items':'Continue'),
+      obWelcomeRows:[{icon:'✦',bg:'#F8DCE3',fg:'#C97C93',text:'Bills grouped by paycheck'},{icon:'✎',bg:'#ECE0F0',fg:'#8B6FA0',text:'Due dates on a calendar'},{icon:'✚',bg:'#DCEAEC',fg:'#4A8A96',text:'Appointments tracked'},{icon:'⌘',bg:'#F6ECD6',fg:'#B98F3E',text:'Plan by paycheck window'}],
+    };
+    const trackOn={width:'46px',height:'27px',borderRadius:'14px',background:'#8CA679',position:'relative',transition:'.2s',flex:'0 0 auto'};
+    const trackOff={width:'46px',height:'27px',borderRadius:'14px',background:'#F1DEE2',position:'relative',transition:'.2s',flex:'0 0 auto'};
+    const knobOn={width:'23px',height:'23px',borderRadius:'50%',background:'#fff',position:'absolute',top:'2px',left:'21px',transition:'.2s'};
+    const knobOff={width:'23px',height:'23px',borderRadius:'50%',background:'#fff',position:'absolute',top:'2px',left:'2px',transition:'.2s'};
+
+    const methods=[{key:'paste',icon:'✎',title:'Paste my notes list',sub:'From Apple Notes or anywhere'},{key:'upload',icon:'✦',title:'Upload a .txt or .md file',sub:'We parse it for you'},{key:'manual',icon:'✚',title:'Start manually',sub:'Add items one at a time'}];
+    v.obMethods=methods.map(m=>{const sel=S.obMethod===m.key;return {...m,selected:sel,iconBg:sel?'#F8DCE3':'#F5EDEA',onClick:()=>this.setState({obMethod:m.key}),style:`width:100%;display:flex;align-items:center;gap:14px;background:#FFFFFF;border:2px solid ${sel?'#C97C93':'transparent'};border-radius:18px;padding:14px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);`};});
+    v.pasteText=S.pasteText;
+    v.onPasteChange=e=>this.setState({pasteText:e.target.value});
+    v.onParse=()=>{ const parsed=this.parseNote(S.pasteText); const sel={}; parsed.forEach(p=>sel[p._i]=true); const pd=this.paydayFromNote(S.pasteText); this.setState({parsed,parsedSel:sel,payday:pd?{...S.payday,...pd}:S.payday,obStep:3}); };
+    const freqs=[{key:'weekly',label:'Weekly'},{key:'biweekly',label:'Biweekly'},{key:'twicemonthly',label:'Twice monthly'},{key:'monthly',label:'Monthly'},{key:'custom',label:'Custom'}];
+    v.payFreqOptions=freqs.map(f=>{const sel=S.payday.freq===f.key;return {...f,onClick:()=>this.setState({payday:{...S.payday,freq:f.key}}),style:`padding:10px 16px;border-radius:14px;border:none;background:${sel?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${sel?'#fff':'#4A3436'};font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.12);`};});
+    v.payDate=S.payday.date||''; v.payAmount=S.payday.amount!=null?String(S.payday.amount):'';
+    v.onPayDate=e=>this.setState({payday:{...S.payday,date:e.target.value}});
+    v.onPayAmount=e=>this.setState({payday:{...S.payday,amount:e.target.value===''?'':(+e.target.value||0)}});
+    v.varyTrackStyle=S.payday.vary?trackOn:trackOff; v.varyKnobStyle=S.payday.vary?knobOn:knobOff; v.onToggleVary=()=>this.setState({payday:{...S.payday,vary:!S.payday.vary}});
+    const order=[['paycheck','Paychecks','#8CA679'],['bill','Bills','#C97C93'],['event','Financial events','#5C9AA6'],['paid','Already paid','#9C7F76'],['task','Tasks','#D98CA0'],['unknown','Needs review','#9C7F76']];
+    const parsed=S.parsed||[];
+    v.parsedBuckets=order.map(([k,label,color])=>{const its=parsed.filter(p=>p.type===k);return {key:k,label,color,count:its.length,countStr:its.length+'',items:its.map(p=>{const meta=[p.amount?this.money(p.amount):'',p.date?'· '+p.date:'',p.paid?'· Paid':''].filter(Boolean).join(' ');const sel=S.parsedSel[p._i]!==false;return {title:p.title,meta,hasMeta:!!meta,sel,onToggle:()=>this.setState({parsedSel:{...S.parsedSel,[p._i]:!sel}})};})};}).filter(b=>b.count>0);
+    const leads=[{key:'d1',label:'1 day before'},{key:'d3',label:'3 days before'},{key:'d7',label:'1 week before'},{key:'custom',label:'Custom reminders'}];
+    v.remindLeadOptions=leads.map(l=>{const on=S.remindLead[l.key];return {...l,track:on?trackOn:trackOff,knob:on?knobOn:knobOff,onClick:()=>this.setState({remindLead:{...S.remindLead,[l.key]:!on}})};});
+    const rtypes=[{key:'bill',label:'Bill due'},{key:'appt',label:'Appointment'},{key:'pay',label:'Paycheck planning'}];
+    v.remindTypeChips=rtypes.map(t=>{const on=S.remindTypes[t.key];return {...t,onClick:()=>this.setState({remindTypes:{...S.remindTypes,[t.key]:!on}}),style:`padding:9px 15px;border-radius:16px;border:none;background:${on?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${on?'#fff':'#4A3436'};font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.10);`};});
+    v.reminderTypeRows=rtypes.map(t=>{const on=S.remindTypes[t.key];return {...t,track:on?trackOn:trackOff,knob:on?knobOn:knobOff,onClick:()=>this.setState({remindTypes:{...S.remindTypes,[t.key]:!on}})};});
+    const homes=[{key:'today',icon:'✦',title:'Today dashboard',sub:'Everything at a glance'},{key:'calendar',icon:'▤',title:'Calendar view',sub:'See due dates'},{key:'paycheck',icon:'⌘',title:'Paycheck view',sub:'Plan by payday'}];
+    v.homeViewOptions=homes.map(h=>{const sel=S.homeView===h.key;return {...h,selected:sel,iconBg:sel?'#F8DCE3':'#F5EDEA',onClick:()=>this.setState({homeView:h.key}),style:`width:100%;display:flex;align-items:center;gap:14px;background:#FFFFFF;border:2px solid ${sel?'#C97C93':'transparent'};border-radius:18px;padding:14px;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);`};});
+
+    // ===== APP =====
+    const titles={today:'Today',money:'Money',calendar:'Calendar'};
+    v.tabTitle=titles[S.tab]||'Today';
+    v.isToday=S.tab==='today'; v.isMoney=S.tab==='money'; v.isCalendar=S.tab==='calendar';
+    const tabDefs=[{key:'today',label:'Today',icon:'✦'},{key:'money',label:'Money',icon:'⌂'},{key:'calendar',label:'Calendar',icon:'▤'}];
+    v.tabs=tabDefs.map(t=>{const active=S.tab===t.key;return {...t,onClick:()=>this.go(t.key),style:`flex:1;height:52px;border:none;border-radius:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:${active?'linear-gradient(135deg,#E7A9B8,#C97C93)':'transparent'};color:${active?'#fff':'#B99A93'};`};});
+    v.openSettings=()=>this.openSettings(); v.closeSettings=()=>this.closeSettings();
+    v.onQuickAdd=()=>this.openModal(null);
+    v.goMoney=()=>this.go('money');
+    v.onRestart=()=>this.setState({phase:'onboarding',obStep:1,settings:false});
+    v.onExportLegacy=()=>this.exportLegacyData();
+    v.onClearData=()=>{ if(confirm('Clear all data and start fresh? This permanently removes everything saved on this device.')) this.clearAll(); };
+    v.predGoal=S.predictGoal||'';
+    v.onPredGoal=e=>this.setState({predictGoal:e.target.value});
+
+    const pcP=this.planningPaycheck();
+
+    // Today
+    if(pcP){ const c=this.pcCalc(pcP); const billsPct=pcP.amount?Math.min(100,(c.bills/pcP.amount*100)):0; const nextP=S.paychecks.filter(p=>p.start>pcP.start).sort((a,b)=>a.start.localeCompare(b.start))[0];
+      v.pc={ windowStr:this.md(pcP.start)+' – '+this.md(pcP.end), leftStr:this.money(c.left), billsPct:billsPct+'%', nextStr:nextP?this.md(nextP.date):'—', countStr:c.its.length+' bills due', stats:[{label:'Total',value:this.money(pcP.amount)},{label:'Bills',value:this.money(c.bills)},{label:'Left',value:this.money(c.left)}] };
+      const due=S.items.filter(i=>(i.type==='bill'||i.type==='event')&&i.pc===pcP.id).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,4); v.dueSoon=due.map(i=>this.chkVm(i));
+    } else { v.pc={windowStr:'',leftStr:'',billsPct:'0%',nextStr:'—',countStr:'',stats:[]}; v.dueSoon=[]; }
+    v.famReminders=S.items.filter(i=>i.type==='task').map(i=>this.taskVm(i));
+    const dowLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const tdyIso=this.today();
+    const eventsByDayW={}; S.items.forEach(i=>{if(i.dueDate){(eventsByDayW[i.dueDate]=eventsByDayW[i.dueDate]||[]).push(this.catColor(i.category));}}); S.paychecks.forEach(p=>{(eventsByDayW[p.date]=eventsByDayW[p.date]||[]).push('#8CA679');});
+    v.weekStrip=[0,1,2,3,4,5,6].map(off=>{const d=new Date(tdyIso+'T00:00:00'); const dow=d.getDay(); d.setDate(d.getDate()-dow+off); const iso=this.iso(d); const sel=iso===S.selectedDate; const isT=iso===tdyIso; const dots=[...new Set(eventsByDayW[iso]||[])].slice(0,2).map(c=>({c})); return {dow:dowLabels[d.getDay()],day:d.getDate()+'',dots,onClick:()=>this.setState({selectedDate:iso,tab:'calendar'}),style:`flex:0 0 auto;width:52px;height:66px;border-radius:18px;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${sel?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${sel?'#fff':(isT?'#C97C93':'#4A3436')};box-shadow:0 4px 12px rgba(201,124,144,.10);`};});
+
+    // Money
+    const msubs=[{key:'paychecks',label:'Paychecks'},{key:'bills',label:'Bills'},{key:'events',label:'Events'},{key:'history',label:'Paid history'}];
+    v.moneySubs=msubs.map(m=>({...m,onClick:()=>this.setState({moneySub:m.key}),style:`padding:9px 16px;border-radius:16px;white-space:nowrap;border:none;background:${S.moneySub===m.key?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${S.moneySub===m.key?'#fff':'#4A3436'};font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.10);`}));
+    v.isMoneyPay=S.moneySub==='paychecks'; v.isMoneyBills=S.moneySub==='bills'; v.isMoneyEvents=S.moneySub==='events'; v.isMoneyHistory=S.moneySub==='history';
+    const visiblePcs=S.paychecks.filter(p=>p.end>=this.today()||S.items.some(i=>i.pc===p.id&&i.amount)).sort((a,b)=>a.start.localeCompare(b.start)).slice(0,8);
+    const proj=visiblePcs.map(p=>({p,c:this.pcCalc(p)}));
+    const sumLeft=(rows)=>rows.reduce((s,r)=>s+r.c.left,0);
+    const next4=sumLeft(proj.slice(0,4)), next8=sumLeft(proj.slice(0,8)), avg=proj.length?sumLeft(proj)/proj.length:0;
+    const goal=+(String(S.predictGoal||'').replace(/[$,\s]/g,''))||0;
+    v.pred={next4Str:this.money(next4),next8Str:this.money(next8),avgStr:this.money(avg),goalStr:goal&&avg>0?Math.ceil(goal/avg)+'':'—'};
+    v.paychecks=proj.map(({p,c})=>{const billsPct=p.amount?Math.min(100,(c.bills/p.amount*100)):0;return {id:p.id,dateStr:this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),billsStr:this.money(c.bills),leftStr:this.money(c.left),leftColor:c.left<0?'#C0605A':'#8CA679',billsPct:billsPct+'%',ring:(pcP&&p.id===pcP.id)?'border:2px solid #F1B9C7;':'',onOpen:()=>this.openOverlay('paycheck',p.id)};});
+    v.billsList=S.items.filter(i=>i.type==='bill').sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||'')).map(i=>this.chkVm(i));
+    v.eventsList=S.items.filter(i=>i.type==='event').map(i=>({title:i.title,metaStr:this.md(i.dueDate),amountStr:this.money(i.amount),icon:this.catIcon(i.category),catBg:this.catBg(i.category),catFg:this.catFg(i.category),onOpen:()=>this.openModal(i.id)}));
+    v.paidHistory=S.items.filter(i=>i.paid).map(i=>({title:i.title,metaStr:'Paid '+this.md(i.paidDate||i.dueDate),amountStr:this.money(i.amount)}));
+
+    // Paycheck overlay
+    const ov=S.overlay;
+    v.showPaycheckOv=!!ov&&ov.kind==='paycheck';
+    if(v.showPaycheckOv){const p=S.paychecks.find(x=>x.id===ov.id);const c=this.pcCalc(p);v.ovPc={dateStr:'Paycheck '+this.md(p.date),windowStr:this.md(p.start)+' – '+this.md(p.end),amountStr:this.money(p.amount),billsStr:this.money(c.bills),leftStr:this.money(c.left),billCountStr:c.its.length+'',items:c.its.map(i=>this.chkVm(i))};} else v.ovPc={items:[]};
+    v.closeOverlay=()=>this.closeOverlay();
+
+    // Calendar
+    const cmodes=[{key:'month',label:'Month'},{key:'week',label:'Week'},{key:'paycheck',label:'Paycheck window'}];
+    v.calModes=cmodes.map(m=>({...m,onClick:()=>this.setState({calMode:m.key}),style:`padding:9px 16px;border-radius:16px;border:none;background:${S.calMode===m.key?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${S.calMode===m.key?'#fff':'#4A3436'};font-size:13.5px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(201,124,144,.10);`}));
+    v.isCalMonth=S.calMode==='month'; v.isCalAgenda=S.calMode!=='month';
+    const cy=S.calYear, cm=S.calMonth0;
+    const monthFirst=new Date(cy,cm,1); const startDow=monthFirst.getDay(); const dim=new Date(cy,cm+1,0).getDate();
+    v.calTitle=monthFirst.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    v.onPrevMonth=()=>{ let y=cy,m=cm-1; if(m<0){m=11;y--;} this.setState({calYear:y,calMonth0:m}); };
+    v.onNextMonth=()=>{ let y=cy,m=cm+1; if(m>11){m=0;y++;} this.setState({calYear:y,calMonth0:m}); };
+    v.weekdayLabels=['S','M','T','W','T','F','S'].map(l=>({l}));
+    const eventsByDay={}; S.items.forEach(i=>{if(i.dueDate){(eventsByDay[i.dueDate]=eventsByDay[i.dueDate]||[]).push(this.catColor(i.category));}}); S.paychecks.forEach(p=>{(eventsByDay[p.date]=eventsByDay[p.date]||[]).push('#8CA679');});
+    const tdy=this.today(); const cells=[];
+    for(let i=0;i<startDow;i++) cells.push({empty:true});
+    for(let d=1;d<=dim;d++){const isoD=cy+'-'+this.pad(cm+1)+'-'+this.pad(d);const dots=[...new Set(eventsByDay[isoD]||[])].slice(0,4).map(c=>({c}));const sel=S.selectedDate===isoD;const isT=isoD===tdy;cells.push({iso:isoD,day:d+'',dots,onClick:()=>this.setState({selectedDate:isoD}),style:`background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;cursor:pointer;padding:2px 0 0;`,numStyle:`width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-sizing:border-box;font-weight:${sel?'800':(isT?'800':'500')};background:${sel?'linear-gradient(135deg,#E7A9B8,#C97C93)':'transparent'};color:${sel?'#fff':(isT?'#C97C93':'#4A3436')};`});}
+    v.calCells=cells.map(c=>c.empty?{day:'',dots:[],onClick:()=>{},style:'background:none;border:none;',numStyle:'opacity:0;'}:c);
+    v.calLegend=[{c:'#C97C93',label:'Bill'},{c:'#8CA679',label:'Paycheck'},{c:'#5C9AA6',label:'Appointment'}];
+    let pStart=null,pEnd=null,aNote='';
+    if(S.calMode==='week'){ const t=new Date(tdy+'T00:00:00'); const ws=new Date(t); ws.setDate(t.getDate()-t.getDay()); const we=new Date(ws); we.setDate(ws.getDate()+6); pStart=this.iso(ws); pEnd=this.iso(we); aNote='This week · '+this.md(pStart)+' – '+this.md(pEnd); }
+    else if(S.calMode==='paycheck'){ if(pcP){ pStart=pcP.start; pEnd=pcP.end; aNote='Paycheck window · '+this.md(pcP.start)+' – '+this.md(pcP.end); } else aNote='No paycheck window set.'; }
+    v.agendaNote=aNote;
+    v.selectedDateStr=this.wd(S.selectedDate);
+    const dayList=[...S.items.filter(i=>i.dueDate===S.selectedDate),...S.paychecks.filter(p=>p.date===S.selectedDate).map(p=>({_pc:true,id:p.id,title:'Paycheck',amount:p.amount,category:'family',type:'paycheck'}))];
+    v.dayHasItems=dayList.length>0; v.dayEmpty=dayList.length===0;
+    v.dayItems=dayList.map(i=>{const tl={bill:'Bill',event:'Financial event',appointment:'Appointment',paycheck:'Paycheck',task:'Task'}[i.type]||'Item';const ic=i._pc?'⌂':this.catIcon(i.category);return {title:i.title,typeLabel:tl,icon:ic,catBg:this.catBg(i.category),catFg:this.catFg(i.category),right:i.amount?this.money(i.amount):(i.time||''),onOpen:()=>{if(!i._pc)this.openModal(i.id);}};});
+
+    // Modal
+    v.showModal=!!S.modal; const d=S.draft||{};
+    const tLabels={bill:'bill',event:'event',task:'task',appointment:'appointment',paycheck:'paycheck'};
+    v.modalTitle=(d.id?'Edit ':'New ')+(tLabels[d.type]||'item');
+    const mtypes=[{key:'bill',label:'Bill'},{key:'paycheck',label:'Paycheck'},{key:'appointment',label:'Appointment'},{key:'task',label:'Task'},{key:'event',label:'Event'}];
+    v.modalTypes=mtypes.map(t=>({...t,onClick:()=>this.setState({draft:{...S.draft,type:t.key}}),style:`padding:9px 16px;border-radius:16px;white-space:nowrap;border:none;background:${d.type===t.key?'linear-gradient(135deg,#E7A9B8,#C97C93)':'#FFFFFF'};color:${d.type===t.key?'#fff':'#4A3436'};font-size:13.5px;font-weight:700;cursor:pointer;`}));
+    const PH={ bill:['Title','Amount','Due date (YYYY-MM-DD)','Notes'], event:['Title','Amount','Date (YYYY-MM-DD)','Notes'], task:['Task name','','','Notes'], appointment:['Title','','Date (YYYY-MM-DD)','Notes / location'], paycheck:['Label (optional)','Amount','Pay date (YYYY-MM-DD)','Notes'] };
+    const ph=PH[d.type]||PH.bill;
+    v.ph1=ph[0]; v.ph2=ph[1]; v.ph3=ph[2]; v.ph4=ph[3];
+    v.draftTitle=d.title||''; v.draftAmount=d.amount!=null?String(d.amount):''; v.draftDate=d.dueDate||''; v.draftNote=d.note||'';
+    v.onDraftTitle=e=>this.setState({draft:{...S.draft,title:e.target.value}});
+    v.onDraftAmount=e=>this.setState({draft:{...S.draft,amount:e.target.value}});
+    v.onDraftDate=e=>this.setState({draft:{...S.draft,dueDate:e.target.value}});
+    v.onDraftNote=e=>this.setState({draft:{...S.draft,note:e.target.value}});
+    v.draftRepeatLabel=d.repeat||'None';
+    v.draftReminderLabel=d.reminder||'None';
+    v.draftPaycheckLabel=(()=>{ if(!d.pc) return 'None'; const p=S.paychecks.find(x=>x.id===d.pc); return p?this.md(p.date):'None'; })();
+    v.onCycleRepeat=()=>{const o=['None','Weekly','Biweekly','Monthly','Yearly'];const c=d.repeat||'None';this.setState({draft:{...S.draft,repeat:o[(o.indexOf(c)+1)%o.length]}});};
+    v.onCycleReminder=()=>{const o=['None','1 day before','3 days before','1 week before'];const c=d.reminder||'None';this.setState({draft:{...S.draft,reminder:o[(o.indexOf(c)+1)%o.length]}});};
+    v.onCyclePaycheck=()=>{const ids=[null,...S.paychecks.map(p=>p.id)];const c=d.pc||null;const idx=ids.indexOf(c);this.setState({draft:{...S.draft,pc:ids[(idx+1)%ids.length]}});};
+    v.canDelete=!!d.id;
+    v.onDeleteDraft=()=>this.onDeleteDraft();
+    v.saveModal=()=>this.saveModal(); v.closeModal=()=>this.closeModal();
+
+    v.showSettings=S.settings;
+    return v;
+  }
+}
+
+
+/* ===========================================================================
+   Boot: instantiate the component, wire it to the template + mount point.
+   =========================================================================== */
+function boot(){
+  var app = new Component();
+  app._tmpl = document.getElementById('t');
+  app._root = document.getElementById('app');
+  app._render();
+  app._loadCloud();
+  window.__familyCommand = app;   // handy for debugging in the console
+}
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})();
+
+</script>
+</body>
+</html>

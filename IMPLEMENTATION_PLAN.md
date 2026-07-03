@@ -355,6 +355,14 @@ bill/appointment instances, paid status, wrapper input, invalid-date skips, and
 unsupported tasks. 103/103 tests pass, `tsc -b`, `vite build`, lint, and legacy
 `index.html` script syntax check all clean.
 
+**M6B status (2026-07-02):** Cutover infrastructure landed. Netlify now builds
+the React app from `app/` and publishes `app/dist` as the root site while still
+bundling the existing `/api/state` function and password edge auth. The legacy
+static app is archived at `app/public/legacy/index.html` and served via
+`/legacy`, with the export button included. SPA fallback is configured for the
+React routes. `netlify build` passes and verifies the new root plus legacy
+archive are both present in the publish output.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

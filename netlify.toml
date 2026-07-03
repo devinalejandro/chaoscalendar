@@ -1,3 +1,7 @@
+[build]
+  command = "npm --prefix app install --no-audit --no-fund && npm --prefix app run build"
+  publish = "app/dist"
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -10,3 +14,13 @@
 
 [functions]
   node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/legacy"
+  to = "/legacy/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
