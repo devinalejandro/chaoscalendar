@@ -73,17 +73,17 @@ export default function AdminPage() {
             Backups
           </Link>
           <Link to="/migration" className="secondary-button link-as-button">
-            Migration
+            Restore backup
           </Link>
           <a href="/legacy" className="secondary-button link-as-button">
-            Legacy app
+            Old app
           </a>
         </div>
       </section>
 
       <section className="card">
         <div className="section-header">
-          <strong>Cloud sync</strong>
+          <strong>Cloud backup</strong>
           <span className={`confidence confidence-${syncReady ? 'high' : 'medium'}`}>
             {syncReady ? 'Ready' : 'Local only'}
           </span>
@@ -106,7 +106,7 @@ export default function AdminPage() {
               setSyncMessage(result.ok ? 'Snapshot pushed to Supabase.' : result.error)
             }}
           >
-            Push snapshot
+            Save to cloud
           </button>
           <button
             type="button"
@@ -126,7 +126,7 @@ export default function AdminPage() {
               }
             }}
           >
-            Pull snapshot
+            Load from cloud
           </button>
         </div>
         <div className="sr-status" aria-live="polite">

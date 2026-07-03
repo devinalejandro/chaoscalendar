@@ -77,6 +77,9 @@ export interface HouseholdState {
   /** Checkbox-friendly wrapper: routes to markPaid or unmarkPaid based on
       the checkbox's new checked state, so the paid toggle is reversible. */
   setInstancePaid: (instanceId: string, paid: boolean) => void
+  /** Lets the user plan a bill against a different paycheck without changing
+      its real due date. Regeneration preserves this manual choice. */
+  moveInstanceToPaycheck: (instanceId: string, paycheckId: string) => void
   addQuickBill: (input: { title: string; amount: number; dueDate: string }) => void
   /** Creates or updates a Bill template (and its RecurrenceRule, if any).
       Any future not-yet-paid instances for this bill are discarded and
@@ -158,6 +161,20 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
       setInstancePaid: (instanceId, paid) => {
         if (paid) get().markPaid(instanceId)
         else get().unmarkPaid(instanceId)
+      },
+      moveInstanceToPaycheck: (instanceId, paycheckId) => {
+        const snapshot = get().snapshot
+        const before = snapshot.data.billInstances.find((i) => i.id === instanceId)
+        if (!before || !snapshot.data.paychecks.some((p) => p.id === paycheckId)) return
+        const after = { ...before, paycheckId, paycheckOverride: true }
+        const next = {
+          ...snapshot,
+          data: {
+            ...snapshot.data,
+            billInstances: snapshot.data.billInstances.map((i) => (i.id === instanceId ? after : i)),
+          },
+        }
+        persistAudited(next, { action: 'bill_instance.move_paycheck', entityType: 'billInstance', entityId: instanceId, before, after })
       },
       addQuickBill: ({ title, amount, dueDate }) => {
         const snapshot = get().snapshot

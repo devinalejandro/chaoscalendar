@@ -58,6 +58,40 @@ describe('assignInstancesToPaychecks', () => {
     expect(out[0].paycheckId).toBe(paychecks[0].id)
   })
 
+  it('preserves a manual paycheck override even when the due date belongs to another window', () => {
+    const instances: BillInstance[] = [
+      {
+        id: 'bi_1',
+        householdId: 'hh',
+        title: 'Moved bill',
+        dueDate: '2026-07-12',
+        status: 'expected',
+        paycheckId: paychecks[0].id,
+        paycheckOverride: true,
+      },
+    ]
+    const out = assignInstancesToPaychecks(instances, paychecks)
+    expect(out[0].paycheckId).toBe(paychecks[0].id)
+    expect(out[0].paycheckOverride).toBe(true)
+  })
+
+  it('clears a manual override when its chosen paycheck no longer exists', () => {
+    const instances: BillInstance[] = [
+      {
+        id: 'bi_1',
+        householdId: 'hh',
+        title: 'Moved bill',
+        dueDate: '2026-07-12',
+        status: 'expected',
+        paycheckId: 'pc_gone',
+        paycheckOverride: true,
+      },
+    ]
+    const out = assignInstancesToPaychecks(instances, paychecks)
+    expect(out[0].paycheckId).toBeUndefined()
+    expect(out[0].paycheckOverride).toBeUndefined()
+  })
+
   it('clears the assignment when the due date falls outside every window', () => {
     const instances: BillInstance[] = [
       { id: 'bi_1', householdId: 'hh', title: 'Far off', dueDate: '2030-01-01', status: 'expected' },

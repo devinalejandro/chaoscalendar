@@ -47,11 +47,11 @@ export default function SettingsPage() {
           Export backup
         </button>
         <label className="field-label">
-          Backup JSON
+          Backup file
           <textarea
             className="field textarea"
             rows={8}
-            placeholder="Paste a Chaos Calendar backup JSON"
+            placeholder="Paste a Chaos Calendar backup file"
             value={restoreText}
             onChange={(e) => setRestoreText(e.target.value)}
           />
@@ -79,7 +79,7 @@ export default function SettingsPage() {
         <strong>Data status</strong>
         <div className="settings-grid">
           <div>
-            <span>Schema</span>
+            <span>Data format</span>
             <strong>v{snapshot.schemaVersion}</strong>
           </div>
           <div>
@@ -87,7 +87,7 @@ export default function SettingsPage() {
             <strong>{snapshot.data.bills.length}</strong>
           </div>
           <div>
-            <span>Instances</span>
+            <span>Bill entries</span>
             <strong>{snapshot.data.billInstances.length}</strong>
           </div>
           <div>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <Link to="/migration" className="secondary-button link-as-button settings-link">
-          Legacy migration
+          Restore old backup
         </Link>
       </section>
     </div>

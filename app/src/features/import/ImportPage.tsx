@@ -187,7 +187,7 @@ export default function ImportPage() {
                         className="field"
                         placeholder="0.00"
                         inputMode="decimal"
-                        value={r.amount != null ? (r.amount / 100).toString() : ''}
+                        value={r.amount != null ? (r.amount / 100).toFixed(2) : ''}
                         onChange={(e) => updateRow(r.id, { amount: e.target.value.trim() ? parseCents(e.target.value) : null })}
                       />
                     </label>
@@ -201,7 +201,9 @@ export default function ImportPage() {
                       />
                     </label>
                     <div className="import-meta">
-                      <span className={`confidence confidence-${r.confidence}`}>{r.confidence} confidence</span>
+                      <span className={`confidence confidence-${r.confidence}`}>
+                        {r.confidence === 'high' ? 'Looks right' : r.confidence === 'medium' ? 'Double-check' : 'Needs your help'}
+                      </span>
                       {!acceptable && <span className="form-error">Needs a date to save</span>}
                       {r.paid && <span className="confidence confidence-high">paid ✅</span>}
                     </div>

@@ -4,11 +4,11 @@ export default function AuthStatus() {
   const configured = isSupabaseConfigured()
   return (
     <div className={`auth-status ${configured ? 'auth-status-live' : 'auth-status-local'}`} role="status">
-      <span>{configured ? 'Supabase ready' : 'Local draft mode'}</span>
+      <span>{configured ? 'Cloud ready' : 'Saved on this device'}</span>
       <small>
         {configured
-          ? 'Production auth can attach here without changing the finance screens.'
-          : 'Data stays in this browser until Supabase keys are added.'}
+          ? 'Cloud login can attach here without changing the finance screens.'
+          : 'Everything is stored safely here. Cloud backup is optional.'}
       </small>
     </div>
   )

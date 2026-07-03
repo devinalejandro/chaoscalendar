@@ -80,6 +80,7 @@ export const BillInstance = z.object({
   status: BillInstanceStatus.default('expected'),
   paidDate: IsoDate.optional(),
   paycheckId: Id.optional(),
+  paycheckOverride: z.boolean().optional(),
   sourceImportId: Id.optional(),
   notes: z.string().optional(),
 })

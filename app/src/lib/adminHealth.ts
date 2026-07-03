@@ -22,8 +22,7 @@ export function buildAdminHealthReport({
 }: {
   snapshot: Snapshot
   supabaseConfigured: boolean
-  /** null while the /legacy reachability check is still in flight — not
-      yet verified, so it must not report "pass". */
+  /** null while the old-app backup reachability check is still in flight. */
   hasLegacyArchive: boolean | null
   hasServiceWorker: boolean
 }): AdminHealthReport {
@@ -42,32 +41,32 @@ export function buildAdminHealthReport({
     },
     {
       id: 'schema',
-      label: 'Schema',
+      label: 'Data format',
       status: snapshot.schemaVersion >= 4 ? 'pass' : 'fail',
-      detail: `Local snapshot schema v${snapshot.schemaVersion}.`,
+      detail: `Local app data format v${snapshot.schemaVersion}.`,
     },
     {
       id: 'supabase',
-      label: 'Supabase',
+      label: 'Cloud storage',
       status: supabaseConfigured ? 'pass' : 'warn',
-      detail: supabaseConfigured ? 'Public Supabase env is configured.' : 'Running in local draft mode until Supabase env is set.',
+      detail: supabaseConfigured ? 'Cloud settings are configured.' : 'Running in local draft mode until cloud settings are added.',
     },
     {
       id: 'legacy',
-      label: 'Legacy archive',
+      label: 'Old app backup',
       status: hasLegacyArchive === null ? 'warn' : hasLegacyArchive ? 'pass' : 'fail',
       detail:
         hasLegacyArchive === null
-          ? 'Checking whether /legacy responds…'
+          ? 'Checking whether the old app backup responds...'
           : hasLegacyArchive
-            ? 'Legacy app is available at /legacy.'
-            : '/legacy did not respond — the archive route may be missing or broken.',
+            ? 'Old app backup is available.'
+            : 'The old app backup did not respond.',
     },
     {
       id: 'pwa',
-      label: 'PWA shell',
+      label: 'Installable app',
       status: hasServiceWorker ? 'pass' : 'warn',
-      detail: hasServiceWorker ? 'Service worker registration is available.' : 'Service worker is not available in this browser.',
+      detail: hasServiceWorker ? 'This browser can install and load the app offline.' : 'Install mode is not available in this browser.',
     },
   ]
 

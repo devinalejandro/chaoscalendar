@@ -31,7 +31,7 @@ export default function App() {
           <summary aria-label="Open secondary navigation">Menu</summary>
           <div className="overflow-menu-panel">
             <Link to="/import">Paste import</Link>
-            <Link to="/migration">Legacy migration</Link>
+            <Link to="/migration">Restore old backup</Link>
             <Link to="/settings">Settings</Link>
             <Link to="/admin">Admin</Link>
           </div>

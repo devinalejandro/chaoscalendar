@@ -290,8 +290,12 @@ summary {
 }
 
 .window-card.current {
-  background: var(--accent-gradient);
-  color: var(--text-inverse);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-raised);
+}
+
+.window-card.short {
+  border-color: var(--danger);
 }
 
 .window-card-label {
@@ -303,7 +307,7 @@ summary {
 }
 
 .window-card.current .window-card-label {
-  color: var(--text-inverse);
+  color: var(--accent-primary);
 }
 
 .window-card-dates {
@@ -316,7 +320,7 @@ summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin: 14px 0 4px;
+  margin: 12px 0 4px;
 }
 
 .window-totals .label {
@@ -340,7 +344,64 @@ summary {
 }
 
 .window-card.current .window-totals .value.strong {
-  color: var(--text-inverse);
+  color: var(--success);
+}
+
+.window-totals .value.short-value,
+.window-card.current .window-totals .value.short-value {
+  color: var(--danger);
+}
+
+.paycheck-progress {
+  display: flex;
+  height: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.paycheck-progress span {
+  display: block;
+  height: 100%;
+}
+
+.paycheck-progress-bills {
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+}
+
+.paycheck-progress-left {
+  background: linear-gradient(90deg, var(--success), #cbd8ad);
+}
+
+.paycheck-progress-key {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.paycheck-progress-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.paycheck-progress-key i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.key-bills {
+  background: var(--accent-primary);
+}
+
+.key-left {
+  background: var(--success);
 }
 
 /* bill list */
@@ -363,6 +424,10 @@ summary {
   font-size: 14px;
 }
 
+.bill-row.with-move {
+  grid-template-columns: var(--touch-target) minmax(0, 1fr) auto auto minmax(124px, 148px);
+}
+
 .bill-row:last-child {
   border-bottom: none;
 }
@@ -371,6 +436,18 @@ summary {
 .bill-row.paid .bill-amount {
   color: var(--text-muted);
   text-decoration: line-through;
+}
+
+.bill-row.overdue {
+  background: linear-gradient(90deg, var(--danger-soft), transparent 56%);
+  border-radius: var(--radius-sm);
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.bill-row.overdue .bill-date {
+  color: var(--danger);
+  font-weight: 800;
 }
 
 .bill-row.paid .bill-date::before {
@@ -406,6 +483,26 @@ summary {
   text-align: right;
 }
 
+.bill-move {
+  display: grid;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bill-move select {
+  min-height: 34px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
 /* quick add */
 .quick-add {
   display: flex;
@@ -438,6 +535,23 @@ summary {
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
+}
+
+.primary-button {
+  min-height: var(--touch-target);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent-gradient);
+  color: var(--text-inverse);
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.compact-primary {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
 }
 
 .form-error {
@@ -787,6 +901,83 @@ button:disabled,
   align-items: stretch;
 }
 
+.paycheck-bills {
+  margin-top: 10px;
+}
+
+.paycheck-bills summary {
+  min-height: var(--touch-target);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--accent-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.timing-card p {
+  margin: 10px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.timing-grid,
+.planner-answer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.timing-grid > div,
+.planner-answer > div {
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.timing-grid span,
+.planner-answer span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.timing-grid strong,
+.planner-answer strong {
+  display: block;
+  margin-top: 3px;
+}
+
+.timing-grid em {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-style: normal;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  padding: 20px;
+  background: rgba(43, 37, 39, 0.28);
+}
+
+.planner-sheet {
+  width: min(100%, 520px);
+  display: grid;
+  gap: 12px;
+  box-shadow: var(--shadow-raised);
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1050,11 +1241,37 @@ button:disabled,
     grid-template-columns: 1fr;
   }
 
+  .bill-row.with-move {
+    grid-template-columns: var(--touch-target) minmax(0, 1fr) auto;
+  }
+
+  .bill-row.with-move .bill-date {
+    grid-column: 2;
+  }
+
+  .bill-row.with-move .bill-amount {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .bill-row.with-move .bill-move {
+    grid-column: 2 / -1;
+  }
+
+  .timing-grid,
+  .planner-answer {
+    grid-template-columns: 1fr;
+  }
+
   .settings-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
   .import-review-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .import-fields {
     grid-template-columns: 1fr;
   }
 }

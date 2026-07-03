@@ -82,6 +82,24 @@ describe('createHouseholdStore — actions', () => {
     const created = store.getState().snapshot.data.billInstances.find((i) => i.title === 'Far future')
     expect(created?.paycheckId).toBeUndefined()
   })
+
+  it('moveInstanceToPaycheck saves a manual paycheck choice and persists it', () => {
+    const storage = createMemoryStorage()
+    const store = createHouseholdStore(storage)
+    const instance = store.getState().snapshot.data.billInstances.find((i) => i.paycheckId)!
+    const target = store.getState().snapshot.data.paychecks.find((p) => p.id !== instance.paycheckId)!
+
+    store.getState().moveInstanceToPaycheck(instance.id, target.id)
+
+    const moved = store.getState().snapshot.data.billInstances.find((i) => i.id === instance.id)
+    expect(moved).toMatchObject({ paycheckId: target.id, paycheckOverride: true })
+
+    const reopened = createHouseholdStore(storage)
+    expect(reopened.getState().snapshot.data.billInstances.find((i) => i.id === instance.id)).toMatchObject({
+      paycheckId: target.id,
+      paycheckOverride: true,
+    })
+  })
 })
 
 describe('createHouseholdStore — saveBill', () => {

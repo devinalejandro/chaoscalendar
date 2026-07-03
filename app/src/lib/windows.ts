@@ -79,6 +79,10 @@ export function generatePaychecks(config: PaydayConfig, householdId: string): Pa
  */
 export function assignInstancesToPaychecks(instances: BillInstance[], paychecks: Paycheck[]): BillInstance[] {
   return instances.map((i) => {
+    if (i.paycheckOverride) {
+      const stillValid = i.paycheckId ? paychecks.some((p) => p.id === i.paycheckId) : false
+      return stillValid ? i : { ...i, paycheckId: undefined, paycheckOverride: undefined }
+    }
     if (!i.dueDate) {
       const stillValid = i.paycheckId ? paychecks.some((p) => p.id === i.paycheckId) : false
       return stillValid ? i : { ...i, paycheckId: undefined }

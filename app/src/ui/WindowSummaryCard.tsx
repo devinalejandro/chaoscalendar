@@ -17,11 +17,23 @@ export function WindowSummaryCard({
   current?: boolean
   children?: ReactNode
 }) {
+  const isShort = summary.left < 0
+  const billsProgress = summary.total > 0 ? Math.min(100, Math.round((summary.billsTotal / summary.total) * 100)) : 0
+  const leftProgress = Math.max(0, 100 - billsProgress)
+
   return (
-    <div className={`card window-card${current ? ' current' : ''}`}>
+    <div className={`card window-card${current ? ' current' : ''}${isShort ? ' short' : ''}`}>
       <div className="window-card-label">{label}</div>
       <div className="window-card-dates">
         {formatDisplay(paycheck.periodStart)} – {formatDisplay(paycheck.periodEnd)}
+      </div>
+      <div className="paycheck-progress" aria-label={`Bills use ${billsProgress}% of this paycheck, with ${leftProgress}% left`}>
+        <span className="paycheck-progress-bills" style={{ width: `${billsProgress}%` }} />
+        <span className="paycheck-progress-left" style={{ width: `${leftProgress}%` }} />
+      </div>
+      <div className="paycheck-progress-key" aria-hidden="true">
+        <span><i className="key-bills" /> Bills</span>
+        <span><i className="key-left" /> Left</span>
       </div>
       <div className="window-totals">
         <div>
@@ -33,11 +45,11 @@ export function WindowSummaryCard({
           <span className="value">{formatCents(summary.billsTotal)}</span>
         </div>
         <div>
-          <span className="label">Left</span>
-          <span className="value strong">{formatCents(summary.left)}</span>
+          <span className="label">{isShort ? 'Short' : 'Left'}</span>
+          <span className={`value strong${isShort ? ' short-value' : ''}`}>{formatCents(summary.left)}</span>
         </div>
         <div>
-          <span className="label">Count</span>
+          <span className="label">Bills due</span>
           <span className="value">{summary.billCount}</span>
         </div>
       </div>

@@ -72,11 +72,11 @@ export default function TodayPage() {
             <strong>{reminders.dueToday.length}</strong>
           </div>
           <div>
-            <span>Next 7</span>
+            <span>Next 7 days</span>
             <strong>{reminders.dueNext7.length}</strong>
           </div>
           <div>
-            <span>Goal/check</span>
+            <span>Save per check</span>
             <strong>{reminders.goalNeededPerUpcomingCheck == null ? '-' : `$${(reminders.goalNeededPerUpcomingCheck / 100).toFixed(0)}`}</strong>
           </div>
         </div>
