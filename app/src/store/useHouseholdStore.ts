@@ -90,6 +90,7 @@ export interface HouseholdState {
       matches an existing instance (same title/date/amount) is skipped so
       re-running an import isn't destructive or duplicative. */
   applyImport: (items: AcceptedImportItem[]) => void
+  replaceSnapshot: (snapshot: Snapshot) => void
 }
 
 /** Builds an isolated store bound to the given storage — production uses the
@@ -254,6 +255,9 @@ export function createHouseholdStore(storage: KeyValueStorage): UseBoundStore<St
         }
 
         persist(next)
+      },
+      replaceSnapshot: (snapshot) => {
+        persist(snapshot)
       },
     }
   })

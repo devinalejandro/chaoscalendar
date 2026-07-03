@@ -344,6 +344,17 @@ bill paid toggles. 100/100 tests pass, `tsc -b`, `vite build`, and lint all
 clean.
 | M6 | Migration + cutover: legacy export button, importer + review, Supabase Auth replaces password gate, old app archived at `/legacy/` | Live household data migrated with review; success criteria in PRD §Success all pass |
 
+**M6A status (2026-07-02):** Legacy export + importer review landed as the
+first safe cutover slice. The live static app now has an "Export data backup"
+button in Settings that downloads the current `auroraCalendar.v1` shape without
+mutating data. The React app has `/migration` for paste/upload of that JSON,
+preview counts, skipped rows, and explicit save into the new Snapshot store.
+`data/migrate/legacy.ts` accepts both direct legacy localStorage shape and the
+Netlify `/api/state` wrapper; fixture tests cover paycheck conversion,
+bill/appointment instances, paid status, wrapper input, invalid-date skips, and
+unsupported tasks. 103/103 tests pass, `tsc -b`, `vite build`, lint, and legacy
+`index.html` script syntax check all clean.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

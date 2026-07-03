@@ -571,6 +571,7 @@
       </sc-for>
     </div>
     <button onClick="{{ onRestart }}" style="width:100%;background:#FFFFFF;border:none;border-radius:16px;padding:15px;color:#C0605A;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);margin-bottom:10px;">Replay onboarding</button>
+    <button onClick="{{ onExportLegacy }}" style="width:100%;background:#FFFFFF;border:none;border-radius:16px;padding:15px;color:#C97C93;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(201,124,144,.10);margin-bottom:10px;">Export data backup</button>
     <button onClick="{{ onClearData }}" style="width:100%;background:#FBE4E4;border:none;border-radius:16px;padding:15px;color:#C0605A;font-size:15px;font-weight:700;cursor:pointer;">Clear all data &amp; start fresh</button>
   </div>
 </div>
@@ -771,6 +772,7 @@ class Component extends DCLogic {
   _queueCloudSave(o){ if(!window.fetch) return; clearTimeout(this._cloudTimer); this._cloudTimer=setTimeout(()=>this._saveCloud(o),700); }
   async _saveCloud(o){ try{ await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:o})}); }catch(e){} }
   async _loadCloud(){ try{ if(!window.fetch) return; const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok) return; const payload=await r.json(); const data=payload&&payload.data; if(!data||typeof data!=='object'){ await this._saveCloud(this._snapshot()); return; } const next={}; this._DKEYS.forEach(k=>{ if(data[k]!==undefined) next[k]=data[k]; }); if(Object.keys(next).length){ this.state=Object.assign({},this.state,next); try{localStorage.setItem('auroraCalendar.v1',JSON.stringify(this._snapshot()));}catch(e){} this._render(); } }catch(e){} }
+  exportLegacyData(){ try{ const payload={exportedAt:new Date().toISOString(),source:'auroraCalendar.v1',data:this._snapshot()}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='aurora-calendar-legacy-export.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); }catch(e){ alert('Could not export data.'); } }
   clearAll(){ try{ localStorage.removeItem('auroraCalendar.v1'); }catch(e){} this._saveCloud({items:[],paychecks:[],payday:{date:'',amount:'',freq:'biweekly',vary:false},remindLead:{d1:true,d3:true,d7:false,custom:false},remindTypes:{bill:true,appt:true,pay:false},homeView:'today',onboarded:false}).finally(()=>location.reload()); }
   setState(u){ super.setState(u); this._persist(); }
 
@@ -1038,6 +1040,7 @@ class Component extends DCLogic {
     v.onQuickAdd=()=>this.openModal(null);
     v.goMoney=()=>this.go('money');
     v.onRestart=()=>this.setState({phase:'onboarding',obStep:1,settings:false});
+    v.onExportLegacy=()=>this.exportLegacyData();
     v.onClearData=()=>{ if(confirm('Clear all data and start fresh? This permanently removes everything saved on this device.')) this.clearAll(); };
     v.predGoal=S.predictGoal||'';
     v.onPredGoal=e=>this.setState({predictGoal:e.target.value});

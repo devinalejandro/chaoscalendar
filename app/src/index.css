@@ -62,10 +62,15 @@ button {
 .import-entry {
   display: inline-block;
   margin-top: 6px;
+  margin-left: 8px;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--aurora-accent);
   text-decoration: none;
+}
+
+.import-entry-secondary {
+  color: var(--aurora-muted);
 }
 
 .tabbar {
@@ -501,6 +506,48 @@ button {
   justify-content: center;
   text-align: center;
   text-decoration: none;
+}
+
+/* migration */
+.migration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.migration-grid > div {
+  background: var(--aurora-paper);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.migration-grid span {
+  display: block;
+  color: var(--aurora-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.migration-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.migration-skips {
+  background: rgba(192, 96, 90, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.migration-skips ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--aurora-danger);
+  font-size: 13px;
 }
 
 /* prediction */

@@ -4,6 +4,7 @@ import PaychecksPage from './features/paychecks/PaychecksPage'
 import CalendarPage from './features/calendar/CalendarPage'
 import BillsPage from './features/bills/BillsPage'
 import ImportPage from './features/import/ImportPage'
+import MigrationPage from './features/migration/MigrationPage'
 
 const TABS = [
   { to: '/today', label: 'Today' },
@@ -21,6 +22,9 @@ export default function App() {
         <Link to="/import" className="import-entry">
           Paste import
         </Link>
+        <Link to="/migration" className="import-entry import-entry-secondary">
+          Legacy migration
+        </Link>
       </header>
 
       <Routes>
@@ -30,6 +34,7 @@ export default function App() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/bills" element={<BillsPage />} />
         <Route path="/import" element={<ImportPage />} />
+        <Route path="/migration" element={<MigrationPage />} />
       </Routes>
 
       <nav className="tabbar" aria-label="Main">
