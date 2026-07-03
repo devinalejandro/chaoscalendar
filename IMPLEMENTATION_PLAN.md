@@ -442,6 +442,23 @@ changes, imports, goals, snapshot restore, and restore undo. Admin shows recent
 history so updates and recovery actions are not invisible. 122/122 tests pass,
 `tsc -b`, `vite build`, and lint are clean.
 
+| M15 | Manual Supabase sync controls | Admin can push/pull validated snapshots on demand |
+
+**M15 status (2026-07-03):** Manual cloud sync controls landed in Admin. Push
+uses the typed Supabase REST upsert boundary; Pull validates the returned
+Snapshot through zod before replacing local data, preserving the existing
+restore/undo safety path. Sync remains explicit and disabled until Supabase env
+and a household id are present.
+
+| M16 | Launch audit automation | Local launch audit catches missing deploy-critical assets |
+
+**M16 status (2026-07-03):** Added `npm run audit:launch`, a small local audit
+that verifies deploy-critical assets/config: manifest, service worker, legacy
+archive, launch checklist, Netlify publish directory, Supabase CSP allowance,
+legacy redirect, and app title/manifest link. A full audit was run after M15/16
+and a bug was fixed: Supabase upsert now asks for `return=representation`, and
+push/pull helpers validate cloud data instead of only constructing requests.
+
 The deployed prototype stays live and untouched until M6; all new work ships
 on Netlify preview URLs.
 

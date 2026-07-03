@@ -1,4 +1,4 @@
-import type { Snapshot } from '../types'
+import { Snapshot as SnapshotSchema, type Snapshot } from '../types'
 import type { SupabaseConfig } from './supabase'
 
 export interface SyncRequest {
@@ -21,7 +21,7 @@ export function buildSnapshotUpsertRequest(config: SupabaseConfig, snapshot: Sna
         apikey: config.anonKey,
         Authorization: `Bearer ${config.anonKey}`,
         'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates',
+        Prefer: 'resolution=merge-duplicates,return=representation',
       },
       body: JSON.stringify({
         household_id: householdId,
@@ -44,5 +44,39 @@ export function buildSnapshotPullRequest(config: SupabaseConfig, householdId: st
         Accept: 'application/json',
       },
     },
+  }
+}
+
+export async function pushSnapshotToSupabase(
+  config: SupabaseConfig,
+  snapshot: Snapshot,
+  fetcher: typeof fetch = fetch,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const request = buildSnapshotUpsertRequest(config, snapshot)
+    const response = await fetcher(request.url, request.init)
+    if (!response.ok) return { ok: false, error: `Push failed: ${response.status}` }
+    return { ok: true }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Push failed' }
+  }
+}
+
+export async function pullSnapshotFromSupabase(
+  config: SupabaseConfig,
+  householdId: string,
+  fetcher: typeof fetch = fetch,
+): Promise<{ ok: true; snapshot: Snapshot } | { ok: false; error: string }> {
+  try {
+    const request = buildSnapshotPullRequest(config, householdId)
+    const response = await fetcher(request.url, request.init)
+    if (!response.ok) return { ok: false, error: `Pull failed: ${response.status}` }
+    const rows = (await response.json()) as unknown
+    if (!Array.isArray(rows) || rows.length === 0) return { ok: false, error: 'No cloud snapshot found.' }
+    const parsed = SnapshotSchema.safeParse((rows[0] as { snapshot?: unknown }).snapshot)
+    if (!parsed.success) return { ok: false, error: 'Cloud snapshot failed validation.' }
+    return { ok: true, snapshot: parsed.data }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'Pull failed' }
   }
 }

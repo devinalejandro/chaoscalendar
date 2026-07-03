@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useHouseholdStore } from '../../store/useHouseholdStore'
 import { buildAdminHealthReport, type HealthStatus } from '../../lib/adminHealth'
 import { getSupabaseConfig, isSupabaseConfigured } from '../../data/supabase'
-import { canSyncSnapshot } from '../../data/supabaseSync'
+import { canSyncSnapshot, pullSnapshotFromSupabase, pushSnapshotToSupabase } from '../../data/supabaseSync'
 import { recentAuditEvents } from '../../lib/audit'
 
 const STATUS_LABEL: Record<HealthStatus, string> = {
@@ -13,7 +14,10 @@ const STATUS_LABEL: Record<HealthStatus, string> = {
 
 export default function AdminPage() {
   const snapshot = useHouseholdStore((s) => s.snapshot)
-  const syncReady = canSyncSnapshot(snapshot, getSupabaseConfig())
+  const replaceSnapshot = useHouseholdStore((s) => s.replaceSnapshot)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
+  const supabaseConfig = getSupabaseConfig()
+  const syncReady = canSyncSnapshot(snapshot, supabaseConfig)
   const auditEvents = recentAuditEvents(snapshot, 8)
   const report = buildAdminHealthReport({
     snapshot,
@@ -71,6 +75,38 @@ export default function AdminPage() {
             ? 'Snapshot sync can use the Supabase cloud_snapshots table.'
             : 'Set Supabase env and keep a household record before enabling cloud sync.'}
         </p>
+        <div className="form-actions admin-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={!syncReady || !supabaseConfig}
+            onClick={async () => {
+              if (!supabaseConfig) return
+              const result = await pushSnapshotToSupabase(supabaseConfig, snapshot)
+              setSyncMessage(result.ok ? 'Snapshot pushed to Supabase.' : result.error)
+            }}
+          >
+            Push snapshot
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={!syncReady || !supabaseConfig || !snapshot.data.household?.id}
+            onClick={async () => {
+              if (!supabaseConfig || !snapshot.data.household?.id) return
+              const result = await pullSnapshotFromSupabase(supabaseConfig, snapshot.data.household.id)
+              if (result.ok) {
+                replaceSnapshot(result.snapshot)
+                setSyncMessage('Snapshot pulled from Supabase.')
+              } else {
+                setSyncMessage(result.error)
+              }
+            }}
+          >
+            Pull snapshot
+          </button>
+        </div>
+        {syncMessage && <p className="form-error settings-message">{syncMessage}</p>}
       </section>
 
       <section className="card">
