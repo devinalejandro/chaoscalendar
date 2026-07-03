@@ -245,3 +245,83 @@ describe('createHouseholdStore — setInstancePaid is reversible', () => {
     expect(reverted.paidDate).toBeUndefined()
   })
 })
+
+describe('createHouseholdStore — applyImport', () => {
+  it('does nothing when given an empty list (nothing saves unreviewed by default)', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const before = store.getState().snapshot
+    store.getState().applyImport([])
+    expect(store.getState().snapshot).toEqual(before)
+  })
+
+  it('creates exactly the accepted paycheck windows for the given paydays, no more', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().applyImport([
+      { type: 'paycheck', title: 'Paycheck', amount: 189348, date: '2026-06-03', paid: false },
+      { type: 'paycheck', title: 'Paycheck', amount: 189348, date: '2026-06-17', paid: false },
+    ])
+    const newWindows = store.getState().snapshot.data.paychecks.filter((p) => p.id === 'pc_2026-06-03' || p.id === 'pc_2026-06-17')
+    expect(newWindows).toHaveLength(2)
+    expect(newWindows.every((p) => p.amount === 189348)).toBe(true)
+    expect(newWindows.find((p) => p.id === 'pc_2026-06-03')).toMatchObject({ periodStart: '2026-06-03', periodEnd: '2026-06-16' })
+  })
+
+  it('creates bill/appointment instances and assigns them to the imported paycheck windows', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().applyImport([
+      { type: 'paycheck', title: 'Paycheck', amount: 189348, date: '2026-06-03', paid: false },
+      { type: 'bill', title: 'Imported Rent', amount: 180000, date: '2026-06-06', paid: false },
+      { type: 'appointment', title: 'Dentist', amount: 7500, date: '2026-06-11', paid: false },
+    ])
+    const rent = store.getState().snapshot.data.billInstances.find((i) => i.title === 'Imported Rent')!
+    expect(rent).toMatchObject({ amount: 180000, dueDate: '2026-06-06', status: 'expected', paycheckId: 'pc_2026-06-03' })
+    const dentist = store.getState().snapshot.data.billInstances.find((i) => i.title === 'Dentist')!
+    expect(dentist).toMatchObject({ amount: 7500, dueDate: '2026-06-11', paycheckId: 'pc_2026-06-03' })
+  })
+
+  it('marks an accepted paid item as paid with paidDate set to its due date', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    store.getState().applyImport([{ type: 'bill', title: 'Netflix', amount: 2934, date: '2026-06-07', paid: true }])
+    const netflix = store.getState().snapshot.data.billInstances.find((i) => i.title === 'Netflix')!
+    expect(netflix).toMatchObject({ status: 'paid', paidDate: '2026-06-07' })
+  })
+
+  it('reconciles paid status onto a matching instance instead of skipping or duplicating it', () => {
+    // The seeded household already has an unpaid Netflix instance materialized
+    // for 2026-06-07 from the Bills-tab template. Importing a paste that
+    // marks that same bill paid (✅) should flip the existing instance, not
+    // silently no-op (the old dedupe behavior) or create a second row.
+    const store = createHouseholdStore(createMemoryStorage())
+    const before = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Netflix' && i.dueDate === '2026-06-07')
+    expect(before).toHaveLength(1)
+    expect(before[0].status).toBe('expected')
+    const existingId = before[0].id
+
+    store.getState().applyImport([{ type: 'bill', title: 'Netflix', amount: 2934, date: '2026-06-07', paid: true }])
+
+    const after = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Netflix' && i.dueDate === '2026-06-07')
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ id: existingId, status: 'paid', paidDate: '2026-06-07' })
+  })
+
+  it('skips a row that already matches an existing instance (title, date, amount)', () => {
+    const store = createHouseholdStore(createMemoryStorage())
+    const item = { type: 'bill' as const, title: 'Imported Rent', amount: 180000, date: '2026-06-06', paid: false }
+    store.getState().applyImport([item])
+    const countAfterFirst = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent').length
+
+    store.getState().applyImport([item])
+    const countAfterSecond = store.getState().snapshot.data.billInstances.filter((i) => i.title === 'Imported Rent').length
+
+    expect(countAfterSecond).toBe(countAfterFirst)
+    expect(countAfterFirst).toBe(1)
+  })
+
+  it('falls back to an existing paycheck amount when a re-import omits the header amount', () => {
+    const store = createHouseholdStore(createMemoryStorage()) // seeded household already has $1,893.48 paychecks
+    const existingAmount = store.getState().snapshot.data.paychecks[0].amount
+    store.getState().applyImport([{ type: 'paycheck', title: 'Paycheck', amount: null, date: '2026-09-02', paid: false }])
+    const created = store.getState().snapshot.data.paychecks.find((p) => p.id === 'pc_2026-09-02')!
+    expect(created.amount).toBe(existingAmount)
+  })
+})

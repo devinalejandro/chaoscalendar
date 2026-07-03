@@ -297,6 +297,42 @@ previously asserted the buggy behavior and had to be corrected), `tsc -b`,
 `vite build`, lint all clean.
 
 | M4 | Import: parser port + fixtures + full review flow | Real paste → grouped review → accept; nothing saves unreviewed |
+
+**M4 status (2026-07-02): paste-import review flow landed at `/import`.**
+`lib/import.ts` (`buildImportSuggestions`) bridges the M0 parser to reviewable
+suggestions: one `paycheck` suggestion per date in a `PAYDAYS` header (parser
+already drops the redundant bare `PAYDAY` line markers), and one `bill` /
+`appointment` / `task` suggestion per parsed line, with M/D dates resolved
+against "now" and a confidence rating (high when both amount and date are
+present, low for a dateless task). `features/import/ImportPage.tsx` is a
+two-step flow — paste → grouped, editable review (Paychecks/Bills/
+Appointments/Tasks, each row showing the original text) → explicit "Save N
+selected." Task suggestions can't be saved as-is (no Task entity in this
+PRD's data model) — their checkbox is disabled with an explanation, and the
+row's type can be changed to Bill/Appointment to promote it if it actually
+has a date. `applyImport` on the store only ever touches what's in that
+accepted list: paycheck rows generate exactly those paycheck windows (no
+speculative extension beyond the parsed dates), bill/appointment rows become
+ad-hoc BillInstances assigned to their window. A basic dedupe guards
+re-import: a row matching an existing instance (same title/date/amount) is
+skipped — except when the paste marks it paid and the existing instance
+isn't yet, in which case the existing instance is reconciled to paid rather
+than silently ignored or duplicated (caught by my own test using the seeded
+household, where Netflix already existed unpaid before the "import"). Two
+real bugs surfaced writing tests, both fixed before commit: an appointment
+fixture used an amount-at-line-end format the parser was never built to
+support (fixed the test, not the parser — documented as parser-scope, not a
+bug); and the dedupe originally just skipped a paid re-import entirely
+instead of reconciling. Verified live: pasted a mixed paste (paydays + paid
+bill + unpaid bill + appointment + a task) and got 5+2+1 = 8 correctly
+grouped, pre-checked suggestions with the task disabled; saved 8, and
+Paychecks immediately showed the paid Apple Subscription (strikethrough)
+alongside the pre-existing seeded bills in the same window, with Bills/Left
+recalculated correctly throughout. 96/96 tests pass, `tsc -b`, `vite build`,
+lint all clean. Not done: ImportBatch/ImportSuggestion audit-log persistence
+(kept as ephemeral component state, per M1's deferred audit-log item) and
+file/.txt upload (paste-only for now, matching the PRD's MVP note).
+
 | M5 | Prediction calculator + Calendar tab | Projections match hand-computed fixtures; goal/vacation planners answer PRD examples |
 | M6 | Migration + cutover: legacy export button, importer + review, Supabase Auth replaces password gate, old app archived at `/legacy/` | Live household data migrated with review; success criteria in PRD §Success all pass |
 
